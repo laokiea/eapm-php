@@ -1,0 +1,20 @@
+{
+    "name": "laokiea/eapm-php",
+    "description": "elastic-apm-php-lib",
+    "type": "library",
+    "authors": [
+        {
+            "name": "sashengpeng",
+            "email": "sashengpeng@blued.com"
+        }
+    ],
+    "homepage": "https://git.blued.cn/sashengpeng/eapm-php",
+    "require": {
+        "php":">=7.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "EApmPHP\\": "src/"
+        }
+    }
+}
