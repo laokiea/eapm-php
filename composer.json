@@ -8,7 +8,7 @@
             "email": "sashengpeng@blued.com"
         }
     ],
-    "licence": "MIT",
+    "license": "MIT",
     "homepage": "https://git.blued.cn/sashengpeng/eapm-php",
     "require": {
         "php":">=7.2.0"
