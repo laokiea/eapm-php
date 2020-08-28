@@ -113,7 +113,7 @@ class EApmMiddleware {
             throw new RuntimeException("Middleware must has at least one Closure object");
         } else {
             $nextMiddleware = $middlewareFuncArgs[0];
-            if ($nextMiddleware->getType() !== "Closure") {
+            if ($nextMiddleware->getType()->getName() !== "Closure") {
                 throw new RuntimeException("Middleware must has at least one Closure object");
             }
         }
