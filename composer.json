@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "EApmPHP\\": "src/"
+            "EApmPhp\\": "src/"
         }
     }
 }
