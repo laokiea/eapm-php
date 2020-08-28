@@ -110,11 +110,11 @@ class EApmMiddleware {
         $middlewareFunc = new \ReflectionFunction($middleware);
         $middlewareFuncArgs = $middlewareFunc->getParameters();
         if (empty($middlewareFuncArgs)) {
-            throw new RuntimeException("Middleware must has at least one callable object");
+            throw new RuntimeException("Middleware must has at least one Closure object");
         } else {
             $nextMiddleware = $middlewareFuncArgs[0];
-            if (!$nextMiddleware->isCallable()) {
-                throw new RuntimeException("Middleware must has at least one callable object");
+            if ($nextMiddleware->getType() !== "Closure") {
+                throw new RuntimeException("Middleware must has at least one Closure object");
             }
         }
 
@@ -129,14 +129,16 @@ class EApmMiddleware {
     public function addParseDistributeHeadersMiddleware() : void
     {
         $middleware = function(\Closure $next) {
-            $httpHeaders = get_headers();
-            foreach ($httpHeaders as $headerName => $header) {
-                $lowerHeaderName = strtolower($headerName);
-                $httpHeaders[$lowerHeaderName] = $header;
-                if ($headerName !== $lowerHeaderName) {
-                    unset($httpHeaders[$headerName]);
+            $getallheaders = function() {
+                $headers = [];
+                foreach ($_SERVER as $name => $value) {
+                    if (substr($name, 0, 5) == 'HTTP_') {
+                        $headers[str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))))] = $value;
+                    }
                 }
-            }
+                return $headers;
+            };
+            $httpHeaders = $getallheaders();
 
             if (isset($httpHeaders["traceparent"])) {
                 //00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01
