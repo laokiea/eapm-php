@@ -49,6 +49,11 @@ class EApmDistributeTrace
     public const PARENT_SPANID_INVALID_FORMAT = "0000000000000000";
 
     /**
+     * Tracestate list members max num
+     */
+    public const TRACESTATE_LIST_MEMBERS_MAX_NUM = 32;
+
+    /**
      * has to record request
      */
     private const MASK_RECORD_REQUEST = 0x01;
@@ -56,13 +61,27 @@ class EApmDistributeTrace
     /**
      * valid traceparent header
      */
-    protected $hasValidTrace;
+    protected $hasValidTrace = null;
+
+    /**
+     * valid transparent header
+     *
+     * @var array
+     */
+    protected $validTraceparent = array();
+
+    /**
+     * valid tracestate header
+     *
+     * @var array
+     */
+    protected $validTracestate = array();
 
     /**
      * Distribute trace id
      * @var
      */
-    protected $tarceId = null;
+    protected $traceId = null;
 
     /**
      * Distribute version id
@@ -81,6 +100,60 @@ class EApmDistributeTrace
      * @var
      */
     protected $traceFlag = null;
+
+    /**
+     * set valid traceparent
+     *
+     */
+    public function setValidTraceparent(array $traceparent)
+    {
+        $this->validTraceparent = $traceparent;
+    }
+
+    /**
+     * get valid traceparent
+     *
+     */
+    public function getValidTraceparent() : array
+    {
+        return $this->validTraceparent;
+    }
+
+    /**
+     * set valid tracestate
+     *
+     */
+    public function setValidTracestate(array $tracestate)
+    {
+        $this->validTraceparent = $tracestate;
+    }
+
+    /**
+     * get valid tracestate
+     *
+     */
+    public function getValidTracestate() : array
+    {
+        return $this->validTracestate;
+    }
+
+    /**
+     * set has valid trace
+     *
+     */
+    public function setHasValidTrace(bool $has)
+    {
+        $this->hasValidTrace = $has;
+    }
+
+    /**
+     * get has valid trace
+     *
+     */
+    public function getHasValidTrace() : bool
+    {
+        return $this->hasValidTrace ?? false;
+    }
 
     /**
      * Check distribute header info is right hex char
@@ -103,7 +176,7 @@ class EApmDistributeTrace
      */
     public function setTraceId(string $traceId)
     {
-        $this->tarceId = trim($traceId);
+        $this->traceId = trim($traceId);
     }
 
     /**
@@ -112,7 +185,7 @@ class EApmDistributeTrace
      */
     public function getTraceId() : string
     {
-        return $this->tarceId ?? "";
+        return $this->traceId ?? "";
     }
 
     /**
@@ -161,7 +234,7 @@ class EApmDistributeTrace
     }
 
     /**
-     * get distribute trace flag
+     * get distribute trace flag bit field
      *
      */
     public function getTraceFlag() : string
@@ -170,7 +243,7 @@ class EApmDistributeTrace
     }
 
     /**
-     * record request according to trace flag
+     * record request according to trace flag bit field
      *
      * @return bool
      */

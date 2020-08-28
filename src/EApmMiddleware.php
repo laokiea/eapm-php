@@ -40,19 +40,39 @@ class EApmMiddleware {
         "parseDistributeHeaders",
         "EApmExtensionCheck",
     );
+
+    /**
+     * EApmDistributeTrace object
+     *
+     */
+    protected $distributeTrace;
+
+    /**
+     * Set distribute trace object
+     *
+     * @var \EApmPhp\Trace\EApmDistributeTrace
+     */
+    public function setDistributeTrace(EApmDistributeTrace $distributeTrace) : void
+    {
+        $this->distributeTrace = $distributeTrace;
+    }
+
+    /**
+     * Get distribute trace object
+     *
+     * @return \EApmPhp\Trace\EApmDistributeTrace
+     */
+    public function getDistributeTrace() : EApmDistributeTrace
+    {
+        return $this->distributeTrace;
+    }
+
     /**
      * middleware
      *
      * @var array
      */
     protected $middleware = array();
-
-    /**
-     * valid transparent header
-     *
-     * @var array
-     */
-    protected $validTransparent = array();
 
     /**
      * EApmMiddleware constructor.
@@ -78,9 +98,9 @@ class EApmMiddleware {
      *
      * @return array
      */
-    public function getValidTransparent() : array
+    public function getValidTraceparent() : array
     {
-        return $this->validTransparent;
+        return $this->validTraceparent;
     }
 
     /**
@@ -132,8 +152,14 @@ class EApmMiddleware {
             $getallheaders = function() {
                 $headers = [];
                 foreach ($_SERVER as $name => $value) {
+                    $value = trim($value);
                     if (substr($name, 0, 5) == 'HTTP_') {
-                        $headers[str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))))] = $value;
+                        $headerName = str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))));
+                        if ($headerName === "tracestate") {
+                            $headers[$headerName][] = $value;
+                        } else {
+                            $headers[] = $value;
+                        }
                     }
                 }
                 return $headers;
@@ -170,10 +196,32 @@ class EApmMiddleware {
                     throw new RuntimeException("Distribute traceparent trace-flag is invalid");
                 }
 
-                $this->validTransparent = compact(["versionId", "traceId", "parentId", "traceFlag"]);
+                $this->setValidTraceparent(compact(["versionId", "traceId", "parentId", "traceFlag"]));
+                $this->setHasValidTrace(true);
             }
+
+            if (isset($httpHeaders["tracestate"]) && !empty($httpHeaders["tracestate"])) {
+                $tracestate = array();
+                foreach ($httpHeaders["tracestate"] as $tracestateList) {
+                    $listMembers = explode(",", $tracestateList);
+                    if (count($listMembers) == 0) {
+                        continue;
+                    }
+                    if (count($listMembers) > EApmDistributeTrace::TRACESTATE_LIST_MEMBERS_MAX_NUM
+                    ) {
+                        throw new RuntimeException("Tracestate header can has up to 32 members");
+                    }
+                    foreach ($listMembers as $member) {
+                        @list($memberKey, $memberValue) = explode("=", $member);
+                        $tracestate[$memberKey] = $tracestate[$memberValue];
+                    }
+                }
+                $this->setValidTracestate($tracestate);
+            }
+
             $next();
         };
+        $middleware = $middleware->bindTo($this->getDistributeTrace(), EApmDistributeTrace::class);
         $this->addMiddleWares($middleware);
     }
 

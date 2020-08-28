@@ -12,6 +12,7 @@
 namespace EApmPhp;
 
 use EApmPhp\EApmMiddleware;
+use EApmPhp\Trace\EApmDistributeTrace;
 
 /**
  * Class EApmComposer
@@ -27,12 +28,20 @@ class EApmComposer
     protected $middleware;
 
     /**
+     * EApmDistributeTrace object
+     *
+     */
+    protected $distributeTrace;
+
+    /**
      * EApmComposer constructor.
      *
      */
     public function __construct(array $defaultMiddwareOpts = [])
     {
         $this->setMiddleware(new EApmMiddleware($defaultMiddwareOpts));
+        $this->setDistributeTrace(new EApmDistributeTrace());
+        $this->getMiddleware()->setDistributeTrace($this->getDistributeTrace());
     }
 
     /**
@@ -53,6 +62,26 @@ class EApmComposer
     public function getMiddleware() : EApmMiddleware
     {
         return $this->middleware;
+    }
+
+    /**
+     * Set distribute trace object
+     *
+     * @var \EApmPhp\Trace\EApmDistributeTrace
+     */
+    public function setDistributeTrace(EApmDistributeTrace $distributeTrace) : void
+    {
+        $this->distributeTrace = $distributeTrace;
+    }
+
+    /**
+     * Get distribute trace object
+     *
+     * @return \EApmPhp\Trace\EApmDistributeTrace
+     */
+    public function getDistributeTrace() : EApmDistributeTrace
+    {
+        return $this->distributeTrace;
     }
 
     /**
