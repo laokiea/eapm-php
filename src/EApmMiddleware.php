@@ -195,7 +195,7 @@ class EApmMiddleware {
             foreach ([
                 "server_url",
                 "secret_token",
-                "server_name",
+                "service_name",
                      ] as $configName) {
                 if (is_null($EApmConfigs["$EApmExtensionName.$configName"])) {
                     if (!getenv("ELASTIC_APM_" . strtoupper($configName))) {
