@@ -39,9 +39,9 @@ class EApmComposer
      */
     public function __construct(array $defaultMiddwareOpts = [])
     {
-        $this->setMiddleware(new EApmMiddleware($defaultMiddwareOpts));
         $this->setDistributeTrace(new EApmDistributeTrace());
         $this->getMiddleware()->setDistributeTrace($this->getDistributeTrace());
+        $this->setMiddleware(new EApmMiddleware($defaultMiddwareOpts));
     }
 
     /**
