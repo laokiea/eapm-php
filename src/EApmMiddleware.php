@@ -211,6 +211,9 @@ class EApmMiddleware {
                     }
                     foreach ($listMembers as $member) {
                         @list($memberKey, $memberValue) = explode("=", $member);
+                        if (!preg_match("/^[0-9a-z\_\-\*\/\@]{1,256}$/", $memberKey)) {
+                            throw new RuntimeException("Tracestate key must begin with a lowercase letter or a digit and contain up to 256 characters");
+                        }
                         $tracestate[$memberKey] = $tracestate[$memberValue];
                     }
                 }

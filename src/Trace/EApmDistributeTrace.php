@@ -54,6 +54,11 @@ class EApmDistributeTrace
     public const TRACESTATE_LIST_MEMBERS_MAX_NUM = 32;
 
     /**
+     * Combined tracestate header max length
+     */
+    private const TRACESTATE_COMBINED_HEADER_MAX_LENGTH = 512;
+
+    /**
      * has to record request
      */
     private const MASK_RECORD_REQUEST = 0x01;
