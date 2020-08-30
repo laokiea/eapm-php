@@ -89,8 +89,6 @@ class EApmMiddleware {
                 }
             }
         }
-
-        $this->parseDefaultMiddlewareOptions();
     }
 
     /**
@@ -108,7 +106,7 @@ class EApmMiddleware {
      *
      * @return void
      */
-    private function parseDefaultMiddlewareOptions() : void
+    public function parseDefaultMiddlewareOptions() : void
     {
         if (!empty($this->defaultMiddlewareOptions)) {
             foreach ($this->defaultMiddlewareOptions as $middlewareName => $opt) {
