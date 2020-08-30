@@ -150,13 +150,13 @@ class EApmMiddleware {
             $getallheaders = function() {
                 $headers = [];
                 foreach ($_SERVER as $name => $value) {
-                    $value = trim($value);
                     if (substr($name, 0, 5) == 'HTTP_') {
+                        $value = trim($value);
                         $headerName = str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))));
                         if ($headerName === "tracestate") {
                             $headers[$headerName][] = $value;
                         } else {
-                            $headers[] = $value;
+                            $headers[$headerName] = $value;
                         }
                     }
                 }
@@ -262,6 +262,13 @@ class EApmMiddleware {
      */
     public function middlewareInvoke(callable $call = null) : void
     {
+        if (!is_null($call) && !($call instanceof \Closure)) {
+            $func = $call;
+            $call = function() use($func) {
+                $func();
+            };
+        }
+
         if (!empty($this->middleware)) {
             $handle = array_reduce(array_reverse($this->middleware), function($next, $middleware) {
                 return function() use($next, $middleware) {
