@@ -56,7 +56,7 @@ class EApmDistributeTrace
     /**
      * Combined tracestate header max length
      */
-    private const TRACESTATE_COMBINED_HEADER_MAX_LENGTH = 512;
+    public const TRACESTATE_COMBINED_HEADER_MAX_LENGTH = 512;
 
     /**
      * has to record request
@@ -113,6 +113,11 @@ class EApmDistributeTrace
     public function setValidTraceparent(array $traceparent)
     {
         $this->validTraceparent = $traceparent;
+        extract($this->validTraceparent, EXTR_OVERWRITE);
+        $this->setVersionId($versionId);
+        $this->setTraceId($traceId);
+        $this->setParentSpanId($parentId);
+        $this->setTraceFlag($traceFlag);
     }
 
     /**
@@ -252,7 +257,7 @@ class EApmDistributeTrace
      *
      * @return bool
      */
-    public function isRecordRequest() : bool
+    public function isParentRecordRequest() : bool
     {
         return boolval(hexdec($this->getTraceFlag()) & self::MASK_RECORD_REQUEST);
     }
