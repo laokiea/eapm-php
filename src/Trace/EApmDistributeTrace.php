@@ -9,7 +9,11 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace EApmPhp\Trace;
+
+use EApmPhp\EApmComposer;
 
 /**
  * Class EApmDistributeTrace
@@ -27,6 +31,12 @@ class EApmDistributeTrace
      * Specific version according to specification
      */
     public const SPECIFIC_VERSION = "00";
+
+    /**
+     * Default trace flag
+     */
+    public const DEFAULT_TRACE_FLAG = "00";
+
 
     /**
      * Trace id length
@@ -57,6 +67,16 @@ class EApmDistributeTrace
      * Combined tracestate header max length
      */
     public const TRACESTATE_COMBINED_HEADER_MAX_LENGTH = 512;
+
+    /**
+     * Combined tracestate header max length
+     */
+    public const TRACESTATE_MEMBER_KEY_VALUE_MAX_LENGTH = 256;
+
+    /**
+     * Not privacy tracestate keys collects
+     */
+    public const NOT_PRIVACY_KEYS_COLLECTS = array("ip", "uid", "token", "auth");
 
     /**
      * has to record request
@@ -107,6 +127,32 @@ class EApmDistributeTrace
     protected $traceFlag = null;
 
     /**
+     * EApmComposer class object
+     * @var
+     */
+    protected $composer;
+
+    /**
+     * Set global composer object
+     *
+     * @param EApmComposer $composer
+     */
+    public function setComposer(EApmComposer $composer): void
+    {
+        $this->composer = $composer;
+    }
+
+    /**
+     * Get global composer object
+     *
+     * @return EApmComposer
+     */
+    public function getComposer(): EApmComposer
+    {
+        return $this->composer;
+    }
+
+    /**
      * set valid traceparent
      *
      */
@@ -133,9 +179,69 @@ class EApmDistributeTrace
      * set valid tracestate
      *
      */
-    public function setValidTracestate(array $tracestate)
+    private function setValidTracestate(array $tracestate)
     {
         $this->validTraceparent = $tracestate;
+    }
+
+    /**
+     * Validate tracestate identity
+     * @param string $identity
+     * @return bool
+     */
+    public function validateTracestateKey(string $identity) : bool
+    {
+        $pattern = sprintf("/^[0-9a-z\_\-\*\/\@]{1,%d}$/", self::TRACESTATE_MEMBER_KEY_VALUE_MAX_LENGTH);
+        return preg_match($pattern, $identity) && $this->checkKeyPrivacy($identity);
+    }
+
+    /**
+     * Tracestate $identity MUST NOT include any user identifiable information like ip,uid,token etc.
+     *
+     * @param string $identity
+     * @return bool
+     */
+    public function checkKeyPrivacy(string $identity) : bool
+    {
+        foreach (self::NOT_PRIVACY_KEYS_COLLECTS as $key) {
+            if (preg_match("/^.*$key.*$/", $identity)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate tracestate value
+     * @param string $value
+     * @return bool
+     */
+    public function validateTracestateValue(string $value) : bool
+    {
+       return mb_strlen($value) <= EApmDistributeTrace::TRACESTATE_MEMBER_KEY_VALUE_MAX_LENGTH;
+    }
+
+    /**
+     * Add user-specify tracestate
+     * Vendors MUST NOT include any personally identifiable information in the tracestate header.
+     *
+     * @param string $identity
+     * @param string $member
+     */
+    public function addValidTracestate(string $identity, string $member) : void
+    {
+        if ($this->validateTracestateKey($identity) && $this->validateTracestateValue($member)) {
+            $newValidTracestate = array(
+                $identity => $member,
+            );
+            if (empty($this->validTracestate)) {
+                foreach ($this->validTracestate as $key => $value) {
+                    $newValidTracestate[$key] = $value;
+                }
+            }
+            $this->validTracestate = $newValidTracestate;
+        }
     }
 
     /**
@@ -151,7 +257,7 @@ class EApmDistributeTrace
      * set has valid trace
      *
      */
-    public function setHasValidTrace(bool $has)
+    private function setHasValidTrace(bool $has)
     {
         $this->hasValidTrace = $has;
     }
@@ -237,8 +343,9 @@ class EApmDistributeTrace
     /**
      * set trace flag
      *
+     * @return void
      */
-    public function setTraceFlag(string $traceFlag)
+    public function setTraceFlag(string $traceFlag) : void
     {
         $this->traceFlag = trim($traceFlag);
     }
@@ -246,10 +353,56 @@ class EApmDistributeTrace
     /**
      * get distribute trace flag bit field
      *
+     * @return string
      */
     public function getTraceFlag() : string
     {
         return $this->traceFlag ?? "";
+    }
+
+    /**
+     * Get traceresponse header string
+     * If the request header contains a valid traceparent with a trace-id/parent-id
+     * the callee SHOULD omit the trace-id/proposed-parent-id field from the traceresponse.
+     *
+     * @return string
+     */
+    public function getTraceResponseHeader() : string
+    {
+        return $this->getHasValidTrace() ?
+            self::SPECIFIC_VERSION."---".$this->getTraceFlag() :
+            $this->getComposer()->getTransaction()->getCurrentTraceResponseHeader();
+    }
+
+    /**
+     * Get traceparent header for outgoing request.
+     * The value of the parent-id field can be set to the new value representing the ID of the current operation.
+     * This is the most typical mutation and should be considered a default.
+     *
+     * @return string
+     */
+    public function getNextRequestTraceparentHeader() : string
+    {
+        return $this->getHasValidTrace() ?
+            $this->getVersionId()."-"
+            .$this->getTraceId()."-"
+            .$this->getComposer()->getTransaction()->getCurrentTransactionSpanId()
+            ."-".self::DEFAULT_TRACE_FLAG
+                :
+            $this->getComposer()->getTransaction()->getCurrentTraceResponseHeader();
+    }
+
+    /**
+     * Get next request trace headers
+     *
+     * @return array
+     */
+    public function getNextRequestTraceHeaders() : array
+    {
+        return array(
+            "traceparent" => $this->getNextRequestTraceparentHeader(),
+            "tracestate" => $this->getComposer()->getCombinedTracestateHeader(),
+        );
     }
 
     /**

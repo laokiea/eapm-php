@@ -9,9 +9,13 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace EApmPhp\Transaction;
 
 use EApmPhp\EApmComposer;
+use EApmPhp\Trace\EApmDistributeTrace;
+use EApmPhp\Util\ShutdownFunctionUtil;
 use Elastic\Apm\TransactionInterface;
 use Elastic\Apm\ElasticApm;
 
@@ -38,7 +42,7 @@ class EApmTransaction
      * Current transaction
      * @var
      */
-    protected $transaction = null;
+    protected $currentTransaction = null;
 
     /**
      * Set global composer object
@@ -75,10 +79,10 @@ class EApmTransaction
      *
      * @return TransactionInterface
      */
-    public function getTransaction(): TransactionInterface
+    public function getCurrentTransaction(): TransactionInterface
     {
-        return $this->transaction
-            ?? ElasticApm::beginCurrentTransaction(
+        return $this->currentTransaction
+            ?? $this->startNewTransaction(
                 $this->getDefaultTransactionName(),
                 self::DEFAULT_TRANSACTION_TYPE
             );
@@ -90,12 +94,20 @@ class EApmTransaction
      *
      * @return void
      */
-    public function startNewTransaction(string $name, string $type) : void
+    public function startNewTransaction(string $name, string $type) : TransactionInterface
     {
-        if (!is_null($this->transaction)) {
-            $this->transaction = ElasticApm::beginCurrentTransaction($name, $type);
-            register_shutdown_function([$this, "transactionShutdownExit"]);
+        if (!is_null($this->currentTransaction)) {
+            // parent trace context
+            if ($this->getComposer()->getDistributeTrace()->getHasValidTrace()) {
+
+            } else {
+                $this->currentTransaction = ElasticApm::beginCurrentTransaction($name, $type);
+            }
+            register_shutdown_function([$this, "endCurrentTransaction"]);
         }
+        $this->setTraceResponseHeader();
+
+        return $this->currentTransaction;
     }
 
     /**
@@ -103,9 +115,11 @@ class EApmTransaction
      *
      * @return void
      */
-    public function transactionShutdownExit() : void
+    public function endCurrentTransaction() : void
     {
-        $this->getTransaction()->end();
+        try {
+            $this->getCurrentTransaction()->end();
+        } catch (\Exception $exception) {return;}
     }
 
     /**
@@ -115,6 +129,32 @@ class EApmTransaction
      */
     public function getCurrentTransactionSpanId() : string
     {
-        return $this->getTransaction()->getId();
+        return $this->getCurrentTransaction()->getId();
+    }
+
+    /**
+     * Get current transaction traceparent info
+     *
+     * @return string
+     */
+    public function getCurrentTraceResponseHeader() : string
+    {
+        return implode("-", array(
+            EApmDistributeTrace::SPECIFIC_VERSION,
+            $this->currentTransaction->getTraceId(),
+            $this->getCurrentTransactionSpanId(),
+            EApmDistributeTrace::DEFAULT_TRACE_FLAG
+        ));
+    }
+
+    /**
+     * Vendors MAY choose to include a traceresponse header on any response
+     * regardless of whether or not a traceparent header was included on the request.
+     *
+     * @return void
+     */
+    public function setTraceResponseHeader() : void
+    {
+        header("traceresponse: " . $this->getComposer()->getDistributeTrace()->getTraceResponseHeader());
     }
 }

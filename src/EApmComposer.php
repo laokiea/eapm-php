@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace EApmPhp;
 
 use EApmPhp\EApmMiddleware;
@@ -48,6 +50,7 @@ class EApmComposer
     {
         // distribute trace
         $this->setDistributeTrace(new EApmDistributeTrace());
+        $this->getDistributeTrace()->setComposer($this);
         // middleware
         $this->setMiddleware(new EApmMiddleware($defaultMiddwareOpts));
         $this->getMiddleware()->setDistributeTrace($this->getDistributeTrace());
@@ -143,6 +146,7 @@ class EApmComposer
 
     /**
      * Get combined tracestate header
+     * The new key-value pair MUST be added to the beginning (left) of the list.
      *
      * @return string
      */
@@ -150,8 +154,8 @@ class EApmComposer
     {
         $tracestate = $this->getDistributeTrace()->getValidTracestate();
         $serviceName = $this->getEApmConfig("service_name");
-        $tracestate[$serviceName] = base64_encode($this->getTransaction()->getCurrentTransactionSpanId());
-        $tracestate = array_reverse($tracestate);
+        $this->getDistributeTrace()->addValidTracestate($serviceName,
+            base64_encode($this->getTransaction()->getCurrentTransactionSpanId()));
 
         $getTracestateLength = function($tracestate):int {
             $tracestateLength = 0;

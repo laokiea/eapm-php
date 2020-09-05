@@ -9,6 +9,8 @@
  * with this source code in the file LICENSE.
  */
 
+declare(strict_types=1);
+
 namespace EApmPhp;
 
 use RuntimeException;
@@ -118,7 +120,7 @@ class EApmMiddleware {
     }
 
     /**
-     * add a middleware
+     * Add a middleware
      *
      * @param \Closure $middleware
      * @return void
@@ -141,6 +143,8 @@ class EApmMiddleware {
 
     /**
      * add a middleware for parsing HTTP headers
+     * If the version/trace-id/parent-id/trace-flag cannot be parsed
+     * the vendor creates a new traceparent header and deletes tracestate
      *
      * @return void
      */
@@ -173,25 +177,33 @@ class EApmMiddleware {
                     $traceFlag,
                     ) = explode("-", trim($httpHeaders["traceparent"]));
                 if ($versionId !== EApmDistributeTrace::SPECIFIC_VERSION) {
-                    throw new RuntimeException("Distribute traceparent version is invalid");
+                    // throw new RuntimeException("Distribute traceparent version is invalid");
+                    $this->setHasValidTrace(false);
+                    goto restraceanddeltracestate;
                 }
 
                 if ($traceId === EApmDistributeTrace::TRACEID_INVALID_FORMAT ||
                     strlen($traceId) !== EApmDistributeTrace::TRACEID_LENGTH ||
                     !EApmDistributeTrace::checkHexChar($traceId)
                 ) {
-                    throw new RuntimeException("Distribute traceparent traceid is invalid");
+                    // throw new RuntimeException("Distribute traceparent traceid is invalid");
+                    $this->setHasValidTrace(false);
+                    goto restraceanddeltracestate;
                 }
 
                 if ($parentId === EApmDistributeTrace::PARENT_SPANID_INVALID_FORMAT ||
                     strlen($parentId) !== EApmDistributeTrace::PARENT_SPANID_LENGTH ||
                     !EApmDistributeTrace::checkHexChar($parentId)
                 ) {
-                    throw new RuntimeException("Distribute traceparent spanid is invalid");
+                    // throw new RuntimeException("Distribute traceparent spanid is invalid");
+                    $this->setHasValidTrace(false);
+                    goto restraceanddeltracestate;
                 }
 
                 if (!EApmDistributeTrace::checkHexChar($traceFlag)) {
-                    throw new RuntimeException("Distribute traceparent trace-flag is invalid");
+                    // throw new RuntimeException("Distribute traceparent trace-flag is invalid");
+                    $this->setHasValidTrace(false);
+                    goto restraceanddeltracestate;
                 }
 
                 $this->setValidTraceparent(compact(["versionId", "traceId", "parentId", "traceFlag"]));
@@ -210,16 +222,14 @@ class EApmMiddleware {
                         throw new RuntimeException("Tracestate header can has up to 32 members");
                     }
                     foreach ($listMembers as $member) {
-                        @list($memberKey, $memberValue) = explode("=", $member);
-                        if (!preg_match("/^[0-9a-z\_\-\*\/\@]{1,256}$/", $memberKey)) {
-                            throw new RuntimeException("Tracestate key must begin with a lowercase letter or a digit and contain up to 256 characters");
-                        }
-                        $tracestate[$memberKey] = $tracestate[$memberValue];
+                        @list($identity, $memberValue) = explode("=", $member);
+                        $this->addValidTracestate($identity, $memberValue);
                     }
                 }
                 $this->setValidTracestate($tracestate);
             }
 
+restraceanddeltracestate:
             $next();
         };
         $middleware = $middleware->bindTo($this->getDistributeTrace(), EApmDistributeTrace::class);
