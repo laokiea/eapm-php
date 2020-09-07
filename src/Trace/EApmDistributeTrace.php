@@ -69,7 +69,7 @@ class EApmDistributeTrace
     public const TRACESTATE_COMBINED_HEADER_MAX_LENGTH = 512;
 
     /**
-     * Combined tracestate header max length
+     * Combined tracestate member key max length
      */
     public const TRACESTATE_MEMBER_KEY_VALUE_MAX_LENGTH = 256;
 
