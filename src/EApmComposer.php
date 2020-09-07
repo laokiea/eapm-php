@@ -152,10 +152,10 @@ class EApmComposer
      */
     public function getCombinedTracestateHeader() : string
     {
-        $tracestate = $this->getDistributeTrace()->getValidTracestate();
         $serviceName = $this->getEApmConfig("service_name");
         $this->getDistributeTrace()->addValidTracestate($serviceName,
             base64_encode($this->getTransaction()->getCurrentTransactionSpanId()));
+        $tracestate = $this->getDistributeTrace()->getValidTracestate();
 
         $getTracestateLength = function($tracestate):int {
             $tracestateLength = 0;

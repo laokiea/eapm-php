@@ -179,7 +179,7 @@ class EApmMiddleware {
                 if ($versionId !== EApmDistributeTrace::SPECIFIC_VERSION) {
                     // throw new RuntimeException("Distribute traceparent version is invalid");
                     $this->setHasValidTrace(false);
-                    goto restraceanddeltracestate;
+                    goto retraceanddeltracestate;
                 }
 
                 if ($traceId === EApmDistributeTrace::TRACEID_INVALID_FORMAT ||
@@ -188,7 +188,7 @@ class EApmMiddleware {
                 ) {
                     // throw new RuntimeException("Distribute traceparent traceid is invalid");
                     $this->setHasValidTrace(false);
-                    goto restraceanddeltracestate;
+                    goto retraceanddeltracestate;
                 }
 
                 if ($parentId === EApmDistributeTrace::PARENT_SPANID_INVALID_FORMAT ||
@@ -197,13 +197,13 @@ class EApmMiddleware {
                 ) {
                     // throw new RuntimeException("Distribute traceparent spanid is invalid");
                     $this->setHasValidTrace(false);
-                    goto restraceanddeltracestate;
+                    goto retraceanddeltracestate;
                 }
 
                 if (!EApmDistributeTrace::checkHexChar($traceFlag)) {
                     // throw new RuntimeException("Distribute traceparent trace-flag is invalid");
                     $this->setHasValidTrace(false);
-                    goto restraceanddeltracestate;
+                    goto retraceanddeltracestate;
                 }
 
                 $this->setValidTraceparent(compact(["versionId", "traceId", "parentId", "traceFlag"]));
@@ -229,7 +229,7 @@ class EApmMiddleware {
                 $this->setValidTracestate($tracestate);
             }
 
-restraceanddeltracestate:
+retraceanddeltracestate:
             $next();
         };
         $middleware = $middleware->bindTo($this->getDistributeTrace(), EApmDistributeTrace::class);
