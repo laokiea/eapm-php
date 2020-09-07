@@ -16,6 +16,7 @@ namespace EApmPhp;
 use EApmPhp\EApmMiddleware;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Transaction\EApmTransaction;
+use EApmPhp\Util\EApmConfigUtil;
 
 /**
  * Class EApmComposer
@@ -129,22 +130,6 @@ class EApmComposer
     }
 
     /**
-     * Get elastic apm config value specifically
-     *
-     * @return string|null
-     */
-    public function getEApmConfig(string $configName) : ?string
-    {
-        if (!($config = ini_get("elastic_apm.$configName"))) {
-            if (!($config = getenv("ELASTIC_APM_".strtoupper($configName)))) {
-                $config = null;
-            }
-        }
-
-        return $config;
-    }
-
-    /**
      * Get combined tracestate header
      * The new key-value pair MUST be added to the beginning (left) of the list.
      *
@@ -152,12 +137,12 @@ class EApmComposer
      */
     public function getCombinedTracestateHeader() : string
     {
-        $serviceName = $this->getEApmConfig("service_name");
+        $serviceName = EApmConfigUtil::getEApmConfig("service_name");
         $this->getDistributeTrace()->addValidTracestate($serviceName,
             base64_encode($this->getTransaction()->getCurrentTransactionSpanId()));
         $tracestate = $this->getDistributeTrace()->getValidTracestate();
 
-        $getTracestateLength = function($tracestate):int {
+        $calTracestateLength = function($tracestate):int {
             $tracestateLength = 0;
             array_walk($tracestate, function($v, $k) use($tracestateLength) {
                 $tracestateLength += strlen("$k=$v,");
@@ -165,7 +150,7 @@ class EApmComposer
             return $tracestateLength - 1;
         };
 
-        while ($getTracestateLength($tracestate) > EApmDistributeTrace::TRACESTATE_COMBINED_HEADER_MAX_LENGTH) {
+        while ($calTracestateLength($tracestate) > EApmDistributeTrace::TRACESTATE_COMBINED_HEADER_MAX_LENGTH) {
             array_pop($tracestate);
         }
 

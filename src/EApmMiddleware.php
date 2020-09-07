@@ -16,6 +16,7 @@ namespace EApmPhp;
 use RuntimeException;
 use InvalidArgumentException;
 use EApmPhp\Trace\EApmDistributeTrace;
+use EApmPhp\Util\EApmConfigUtil;
 
 /**
  * Class EApmMiddleware
@@ -256,10 +257,8 @@ retraceanddeltracestate:
                 "secret_token",
                 "service_name",
                      ] as $configName) {
-                if (is_null($EApmConfigs["$EApmExtensionName.$configName"])) {
-                    if (!getenv("ELASTIC_APM_" . strtoupper($configName))) {
-                        throw new RuntimeException("$EApmExtensionName.$configName can not be null");
-                    }
+                if (is_null(EApmConfigUtil::getEApmConfig($configName))) {
+                    throw new RuntimeException("$EApmExtensionName.$configName can not be null");
                 }
             }
 
