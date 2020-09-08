@@ -181,7 +181,16 @@ class EApmDistributeTrace
      */
     private function setValidTracestate(array $tracestate)
     {
-        $this->validTraceparent = $tracestate;
+        $this->validTracestate = $tracestate;
+    }
+
+    /**
+     * get valid tracestate
+     *
+     */
+    public function getValidTracestate() : array
+    {
+        return $this->validTracestate;
     }
 
     /**
@@ -242,15 +251,6 @@ class EApmDistributeTrace
             }
             $this->validTracestate = $newValidTracestate;
         }
-    }
-
-    /**
-     * get valid tracestate
-     *
-     */
-    public function getValidTracestate() : array
-    {
-        return $this->validTracestate;
     }
 
     /**

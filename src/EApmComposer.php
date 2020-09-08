@@ -17,6 +17,7 @@ use EApmPhp\EApmMiddleware;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Transaction\EApmTransaction;
 use EApmPhp\Util\EApmConfigUtil;
+use EApmPhp\Util\EApmUtil;
 
 /**
  * Class EApmComposer
@@ -137,24 +138,17 @@ class EApmComposer
      */
     public function getCombinedTracestateHeader() : string
     {
+        $combinedHeader = "";
         $serviceName = EApmConfigUtil::getEApmConfig("service_name");
         $this->getDistributeTrace()->addValidTracestate($serviceName,
             base64_encode($this->getTransaction()->getCurrentTransactionSpanId()));
         $tracestate = $this->getDistributeTrace()->getValidTracestate();
 
-        $calTracestateLength = function($tracestate):int {
-            $tracestateLength = 0;
-            array_walk($tracestate, function($v, $k) use($tracestateLength) {
-                $tracestateLength += strlen("$k=$v,");
-            });
-            return $tracestateLength - 1;
-        };
-
-        while ($calTracestateLength($tracestate) > EApmDistributeTrace::TRACESTATE_COMBINED_HEADER_MAX_LENGTH) {
+        while (EApmUtil::calTracestateLength($tracestate)
+            > EApmDistributeTrace::TRACESTATE_COMBINED_HEADER_MAX_LENGTH) {
             array_pop($tracestate);
         }
 
-        $combinedHeader = "";
         foreach ($tracestate as $memberName => $member) {
             $combinedHeader .= "$memberName=$member,";
         }

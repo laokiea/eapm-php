@@ -17,6 +17,7 @@ use RuntimeException;
 use InvalidArgumentException;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Util\EApmConfigUtil;
+use EApmPhp\Util\EApmUtil;
 
 /**
  * Class EApmMiddleware
@@ -152,23 +153,7 @@ class EApmMiddleware {
     public function addParseDistributeHeadersMiddleware() : void
     {
         $middleware = function(\Closure $next) {
-            $getallheaders = function() {
-                $headers = [];
-                foreach ($_SERVER as $name => $value) {
-                    if (substr($name, 0, 5) == 'HTTP_') {
-                        $value = trim($value);
-                        $headerName = str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))));
-                        if ($headerName === "tracestate") {
-                            $headers[$headerName][] = $value;
-                        } else {
-                            $headers[$headerName] = $value;
-                        }
-                    }
-                }
-                return $headers;
-            };
-            $httpHeaders = $getallheaders();
-
+            $httpHeaders = EApmUtil::getAllHttpHeaders();
             if (isset($httpHeaders["traceparent"])) {
                 //00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01
                 @list(
@@ -212,7 +197,6 @@ class EApmMiddleware {
             }
 
             if (isset($httpHeaders["tracestate"]) && !empty($httpHeaders["tracestate"])) {
-                $tracestate = array();
                 foreach ($httpHeaders["tracestate"] as $tracestateList) {
                     $listMembers = explode(",", $tracestateList);
                     if (count($listMembers) == 0) {
@@ -227,7 +211,6 @@ class EApmMiddleware {
                         $this->addValidTracestate($identity, $memberValue);
                     }
                 }
-                $this->setValidTracestate($tracestate);
             }
 
 retraceanddeltracestate:
