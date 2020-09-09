@@ -18,14 +18,14 @@ namespace EApmPhp\Util;
  *
  * @internal
  */
-final class EApmConfigUtil
+final class ElasticApmConfigUtil
 {
     /**
      * Get elastic apm config value specifically
      *
      * @return string|null
      */
-    public static function getEApmConfig(string $configName) : ?string
+    public static function getElasticApmConfig(string $configName) : ?string
     {
         if (!($config = ini_get("elastic_apm.$configName"))) {
             if (!($config = getenv("ELASTIC_APM_".strtoupper($configName)))) {

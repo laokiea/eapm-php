@@ -23,6 +23,11 @@ use EApmPhp\EApmComposer;
 class EApmDistributeTrace
 {
     /**
+     * Traceparent header name
+     */
+    public const ELASTIC_APM_TRACEPARENT_HEADER_NAME = "elastic-apm-traceparent";
+
+    /**
      * Hex digit char array
      */
     public const HEX_DIGIT = array('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f');
@@ -51,7 +56,7 @@ class EApmDistributeTrace
     /**
      * Span id length
      */
-    public const PARENT_SPANID_LENGTH = 16;
+    public const SPANID_LENGTH = 16;
 
     /**
      * Invalid traceid format
@@ -371,7 +376,7 @@ class EApmDistributeTrace
     {
         return $this->getHasValidTrace() ?
             self::SPECIFIC_VERSION."---".$this->getTraceFlag() :
-            $this->getComposer()->getTransaction()->getCurrentTraceResponseHeader();
+            $this->getComposer()->getCurrentTraceResponseHeader();
     }
 
     /**
@@ -386,10 +391,10 @@ class EApmDistributeTrace
         return $this->getHasValidTrace() ?
             $this->getVersionId()."-"
             .$this->getTraceId()."-"
-            .$this->getComposer()->getTransaction()->getCurrentTransactionSpanId()
+            .$this->getComposer()->getCurrentTransactionSpanId()
             ."-".self::DEFAULT_TRACE_FLAG
                 :
-            $this->getComposer()->getTransaction()->getCurrentTraceResponseHeader();
+            $this->getComposer()->getCurrentTraceResponseHeader();
     }
 
     /**
@@ -400,7 +405,7 @@ class EApmDistributeTrace
     public function getNextRequestTraceHeaders() : array
     {
         return array(
-            "traceparent" => $this->getNextRequestTraceparentHeader(),
+            EApmDistributeTrace::ELASTIC_APM_TRACEPARENT_HEADER_NAME => $this->getNextRequestTraceparentHeader(),
             "tracestate" => $this->getComposer()->getCombinedTracestateHeader(),
         );
     }

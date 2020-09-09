@@ -60,4 +60,15 @@ final class EApmUtil
 
         return $tracestateLength;
     }
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function wordUppercaseFirst(string $string, string $delimiter = "_") : string
+    {
+       return implode("", array_map(function($word) {
+            return ucfirst($word);
+        }, explode($delimiter, $string)));
+    }
 }

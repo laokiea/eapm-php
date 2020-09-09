@@ -16,8 +16,8 @@ namespace EApmPhp\Transaction;
 use EApmPhp\EApmComposer;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Util\ShutdownFunctionUtil;
-use Elastic\Apm\TransactionInterface;
-use Elastic\Apm\ElasticApm;
+use EApmPhp\Util\EApmRandomIdUtil;
+use EApmPhp\Util\ElasticApmConfigUtil;
 
 /**
  * Class EApmTransaction
@@ -27,22 +27,94 @@ use Elastic\Apm\ElasticApm;
 class EApmTransaction
 {
     /**
-     * Default transaction type
-     * @const
-     */
-    public const DEFAULT_TRANSACTION_TYPE = "eapm-php-type";
-
-    /**
      * EApmComposer class object
      * @var
      */
     protected $composer;
 
     /**
-     * Current transaction
+     * The Span-Id of current transaction
      * @var
      */
-    protected $currentTransaction = null;
+    protected $id;
+
+    /**
+     * Transaction name
+     * @var
+     */
+    protected $name;
+
+    /**
+     * Transaction type
+     * @var
+     */
+    protected $type;
+
+    /**
+     * Current transaction is started
+     * @var
+     */
+    protected $isStarted = false;
+
+    /**
+     * Set the Span-Id of current transaction
+     *
+     * @param string $id
+     */
+    public function setId(string $id) : void
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * Get the Span-Id of current transaction
+     *
+     * @return string
+     */
+    public function getId() : string
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set the name of current transaction
+     *
+     * @param string $name
+     */
+    public function setName(string $name) : void
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * Get the name of current transaction
+     *
+     * @return string
+     */
+    public function getName() : string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set the type of current transaction
+     *
+     * @param string $type
+     */
+    public function setType(string $type) : void
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * Get the type of current transaction
+     *
+     * @return string
+     */
+    public function getType() : string
+    {
+        return $this->type;
+    }
 
     /**
      * Set global composer object
@@ -65,96 +137,32 @@ class EApmTransaction
     }
 
     /**
-     * Get default transaction name according to service_name
+     * Get distribute trace id
      *
      * @return string
      */
-    public function getDefaultTransactionName(): string
+    public function getTraceId() : string
     {
-        return ($this->getComposer()->getEApmConfig("service_name")) . date("YmdH");
+        return $this->getComposer()->getDistributeTrace()->getTraceId();
     }
 
     /**
-     * Get current transaction object
-     *
-     * @return TransactionInterface
-     */
-    public function getCurrentTransaction(): TransactionInterface
-    {
-        return $this->currentTransaction
-            ?? $this->startNewTransaction(
-                $this->getDefaultTransactionName(),
-                self::DEFAULT_TRANSACTION_TYPE
-            );
-    }
-
-
-    /**
-     * Start new transaction
+     * End a transaction
      *
      * @return void
      */
-    public function startNewTransaction(string $name, string $type) : TransactionInterface
+    public function end() : void
     {
-        if (!is_null($this->currentTransaction)) {
-            // parent trace context
-            if ($this->getComposer()->getDistributeTrace()->getHasValidTrace()) {
 
-            } else {
-                $this->currentTransaction = ElasticApm::beginCurrentTransaction($name, $type);
-            }
-            register_shutdown_function([$this, "endCurrentTransaction"]);
-        }
-        $this->setTraceResponseHeader();
-
-        return $this->currentTransaction;
     }
 
     /**
-     * Register a function to end transaction when script exit
+     * Current transaction is started
      *
-     * @return void
+     * @return bool
      */
-    public function endCurrentTransaction() : void
+    public function isStarted() : bool
     {
-        try {
-            $this->getCurrentTransaction()->end();
-        } catch (\Exception $exception) {return;}
-    }
-
-    /**
-     * Gets the ID of the transaction. Transaction ID is a hex encoded 64 random bits (== 8 bytes == 16 hex digits) ID.
-     *
-     * @return string
-     */
-    public function getCurrentTransactionSpanId() : string
-    {
-        return $this->getCurrentTransaction()->getId();
-    }
-
-    /**
-     * Get current transaction traceparent info
-     *
-     * @return string
-     */
-    public function getCurrentTraceResponseHeader() : string
-    {
-        return implode("-", array(
-            EApmDistributeTrace::SPECIFIC_VERSION,
-            $this->currentTransaction->getTraceId(),
-            $this->getCurrentTransactionSpanId(),
-            EApmDistributeTrace::DEFAULT_TRACE_FLAG
-        ));
-    }
-
-    /**
-     * Vendors MAY choose to include a traceresponse header on any response
-     * regardless of whether or not a traceparent header was included on the request.
-     *
-     * @return void
-     */
-    public function setTraceResponseHeader() : void
-    {
-        header("traceresponse: " . $this->getComposer()->getDistributeTrace()->getTraceResponseHeader());
+        return $this->isStarted;
     }
 }

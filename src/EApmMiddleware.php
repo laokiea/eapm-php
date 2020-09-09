@@ -16,7 +16,7 @@ namespace EApmPhp;
 use RuntimeException;
 use InvalidArgumentException;
 use EApmPhp\Trace\EApmDistributeTrace;
-use EApmPhp\Util\EApmConfigUtil;
+use EApmPhp\Util\ElasticApmConfigUtil;
 use EApmPhp\Util\EApmUtil;
 
 /**
@@ -34,6 +34,12 @@ class EApmMiddleware {
         "parseDistributeHeaders" => true,
         "EApmExtensionCheck" => true,
     );
+
+    /**
+     * Transaction library
+     * @var
+     */
+    protected $library;
 
     /**
      * default middleware options name
@@ -82,7 +88,7 @@ class EApmMiddleware {
      * EApmMiddleware constructor.
      *
      */
-    public function __construct(array $defaultMiddwareOpts = [])
+    public function __construct(array $defaultMiddwareOpts = [], string $library)
     {
         if (!empty($defaultMiddwareOpts)) {
             foreach ($defaultMiddwareOpts as $middlewareName => $opt) {
@@ -93,16 +99,7 @@ class EApmMiddleware {
                 }
             }
         }
-    }
-
-    /**
-     * get valid transparent
-     *
-     * @return array
-     */
-    public function getValidTraceparent() : array
-    {
-        return $this->validTraceparent;
+        $this->library = $library;
     }
 
     /**
@@ -154,7 +151,7 @@ class EApmMiddleware {
     {
         $middleware = function(\Closure $next) {
             $httpHeaders = EApmUtil::getAllHttpHeaders();
-            if (isset($httpHeaders["traceparent"])) {
+            if (isset($httpHeaders[EApmDistributeTrace::ELASTIC_APM_TRACEPARENT_HEADER_NAME])) {
                 //00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01
                 @list(
                     $versionId,
@@ -178,7 +175,7 @@ class EApmMiddleware {
                 }
 
                 if ($parentId === EApmDistributeTrace::PARENT_SPANID_INVALID_FORMAT ||
-                    strlen($parentId) !== EApmDistributeTrace::PARENT_SPANID_LENGTH ||
+                    strlen($parentId) !== EApmDistributeTrace::SPANID_LENGTH ||
                     !EApmDistributeTrace::checkHexChar($parentId)
                 ) {
                     // throw new RuntimeException("Distribute traceparent spanid is invalid");
@@ -228,20 +225,20 @@ retraceanddeltracestate:
     public function addEApmExtensionCheckMiddleware() : void
     {
         $middleware = function(\Closure $next) {
-            $EApmExtensionName = "elastic_apm";
-            if (!extension_loaded($EApmExtensionName)) {
-                throw new RuntimeException("Missing elastic-apm extension");
-            }
-
-            // apm config
-            $EApmConfigs = ini_get_all($EApmExtensionName, true);
-            foreach ([
-                "server_url",
-                "secret_token",
-                "service_name",
-                     ] as $configName) {
-                if (is_null(EApmConfigUtil::getEApmConfig($configName))) {
-                    throw new RuntimeException("$EApmExtensionName.$configName can not be null");
+            if ($this->library == EApmComposer::OFFICIAL_TRANSACTION_LIBRARY) {
+                $EApmExtensionName = "elastic_apm";
+                $EApmConfigs = ini_get_all($EApmExtensionName, true);
+                if (!extension_loaded($EApmExtensionName)) {
+                    throw new RuntimeException("Missing elastic-apm extension");
+                }
+                foreach ([
+                             "server_url",
+                             "secret_token",
+                             "service_name",
+                         ] as $configName) {
+                    if (is_null(ElasticApmConfigUtil::getElasticApmConfig($configName))) {
+                        throw new RuntimeException("$EApmExtensionName.$configName can not be null");
+                    }
                 }
             }
 
