@@ -158,7 +158,7 @@ class EApmMiddleware {
                     $traceId,
                     $parentId,
                     $traceFlag,
-                    ) = explode("-", trim($httpHeaders["traceparent"]));
+                    ) = explode("-", trim($httpHeaders[EApmDistributeTrace::ELASTIC_APM_TRACEPARENT_HEADER_NAME]));
                 if ($versionId !== EApmDistributeTrace::SPECIFIC_VERSION) {
                     // throw new RuntimeException("Distribute traceparent version is invalid");
                     $this->setHasValidTrace(false);
