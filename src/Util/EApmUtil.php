@@ -80,11 +80,20 @@ final class EApmUtil
     public static function getRequestStartTimestamp() : int
     {
         if (isset($_SERVER["REQUEST_TIME_FLOAT"])) {
-            return $_SERVER["REQUEST_TIME_FLOAT"] * 1000000;
+            return intval($_SERVER["REQUEST_TIME_FLOAT"] * 1000000);
         } elseif (isset($_SERVER["REQUEST_TIME"])) {
             return $_SERVER["REQUEST_TIME"];
         } else {
             return time();
         }
+    }
+
+    /**
+     * Get event duration in MilliSeconds
+     * @return int
+     */
+    public static function getDurationMilliseconds(float $startTime) : int
+    {
+        return (microtime(true) - $startTime) * 1000;
     }
 }

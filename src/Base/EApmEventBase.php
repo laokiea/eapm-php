@@ -18,6 +18,7 @@ use EApmPhp\Events\EApmSpan;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Util\EApmRandomIdUtil;
+use EApmPhp\Util\EApmUtil;
 
 /**
  * Class EApmEventBase, All transaction/span parent class
@@ -184,7 +185,7 @@ class EApmEventBase
      *
      * @return string
      */
-    public function getParentId() : string
+    public function getParentId() : ?string
     {
         return $this->parentId;
     }
@@ -224,7 +225,7 @@ class EApmEventBase
      *
      * @return int
      */
-    public function getDuration() : int
+    public function getDuration() : ?int
     {
         return $this->duration;
     }
@@ -233,7 +234,7 @@ class EApmEventBase
      * Set current transaction started
      * @return void
      */
-    public function setIsStarted() : void
+    public function setStarted() : void
     {
         $this->isStarted = true;
     }
@@ -242,9 +243,9 @@ class EApmEventBase
      * Set current transaction ended
      * @return void
      */
-    public function setIsEnded() : void
+    public function setEnded() : void
     {
-        $this->isEnded = false;
+        $this->isEnded = true;
     }
 
     /**
@@ -294,9 +295,8 @@ class EApmEventBase
      */
     public function end() : void
     {
-        $duration = time() - $this->getTimestamp();
-        $this->setIsEnded();
-        $this->setDuration($duration);
+        $this->setEnded();
+        $this->setDuration(EApmUtil::getDurationMilliseconds($this->getTimestamp()));
         $this->updateRegisteredEvent();
         $this->getComposer()->getEventIntake()->addEvent($this);
     }
@@ -318,7 +318,7 @@ class EApmEventBase
      *
      * @param int $timestamp
      */
-    public function setTimestamp(int $timestamp) : void
+    public function setTimestamp(float $timestamp) : void
     {
         $this->timestamp = $timestamp;
     }
@@ -328,7 +328,7 @@ class EApmEventBase
      *
      * @return int
      */
-    public function getTimestamp() : int
+    public function getTimestamp() : float
     {
         return $this->timestamp;
     }
@@ -416,6 +416,7 @@ class EApmEventBase
 
         $eVeNtTyPe = $this->getEventType();
         $eVeNtBaSeMeTrIcS = [
+            "id"        => $this->getId(),
             "eventType" => $eVeNtTyPe,
             "parentId"  => $this->getParentId() ?? "",
             "traceId"   => $this->getTraceId(),

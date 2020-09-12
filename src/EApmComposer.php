@@ -116,22 +116,22 @@ class EApmComposer
      */
     public function __construct(?array $defaultMiddlewareOpts = null, ?string $library = null)
     {
-        $this->prepareBinds($defaultMiddwareOpts ?? []);
         $this->setLibrary($library ?? self::DEFAULT_TRANSACTION_LIBRARY);
-        // distribute trace
+        $this->prepareBinds($defaultMiddwareOpts ?? []);
+
         $this->setDistributeTrace(EApmContainer::make("distributeTrace"));
         $this->getDistributeTrace()->setComposer($this);
-        // middleware
+
         $this->setMiddleware(EApmContainer::make("middleware"));
         $this->getMiddleware()->setDistributeTrace($this->getDistributeTrace());
         $this->getMiddleware()->parseDefaultMiddlewareOptions();
-        //event intake
+
         $this->setEventIntake(EApmContainer::make("eventIntake"));
         $this->getEventIntake()->setComposer($this);
-        // logger
+
         $this->setLogger(EApmContainer::make("logger"));
         $this->getLogger()->setComposer($this);
-        //global agent
+
         EApmContainer::bind("GAgent", function() {
             return $this;
         });

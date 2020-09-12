@@ -65,8 +65,8 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
     {
         $this->setName($name);
         $this->setType($type);
-        $this->setIsStarted();
-        $this->setTimestamp(EApmUtil::getRequestStartTimestamp());
+        $this->setStarted();
+        $this->setTimestamp(microtime(true));
         // transaction/span id
         $this->setId($this->getRandomAndUniqueSpanId());
 
