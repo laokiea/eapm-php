@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace EApmPhp;
 
-use EApmPhp\EApmMiddleware;
+use EApmPhp\Base\EApmContainer;
+use EApmPhp\Base\EApmEventBase;
+use EApmPhp\Component\EApmLogger;
 use EApmPhp\Trace\EApmDistributeTrace;
-use EApmPhp\Transaction\EApmTransaction;
+use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Util\ElasticApmConfigUtil;
 use EApmPhp\Util\EApmRandomIdUtil;
 use EApmPhp\Util\EApmUtil;
@@ -45,29 +47,46 @@ class EApmComposer
      * official transaction library
      * @const
      */
-    public const OFFICIAL_TRANSACTION_LIBRARY = "elastic-apm-php";
+    public const OFFICIAL_TRANSACTION_LIBRARY = "elastic-apm-php-agent";
 
+    /**
+     * Agent version
+     * @const
+     */
+    public const AGENT_VERSION = "0.0.1";
+
+    /**
+     * Agent name
+     * @const
+     */
+    public const AGENT_NAME = "EAPM-PHP";
+
+    /**
+     * Guzzle client to send event
+     * @var
+     */
+    public static $eventClient = null;
 
     /**
      * EApmMiddleware object
      *
      */
-    protected $middleware;
+    protected $middleware = null;
 
     /**
      * EApmDistributeTrace object
      *
      */
-    protected $distributeTrace;
+    protected $distributeTrace = null;
 
     /**
      * EApmConfigure object
      *
      */
-    protected $configure;
+    protected $configure = null;
 
     /**
-     * Transaction library
+     * Events library
      * @var
      */
     protected $library;
@@ -79,19 +98,84 @@ class EApmComposer
     protected $currentTransaction = null;
 
     /**
+     * Logger
+     * @var
+     */
+    protected $logger = null;
+
+    /**
+     * EApmEventIntake object
+     * @var
+     */
+    protected $eventIntake;
+
+    /**
      * EApmComposer constructor.
-     *
+     * @param string|null $library
+     * @param array|null $defaultMiddwareOpts
      */
     public function __construct(?array $defaultMiddwareOpts, ?string $library)
     {
+        $this->prepareBinds($defaultMiddwareOpts ?? []);
         $this->setLibrary($library ?? self::DEFAULT_TRANSACTION_LIBRARY);
         // distribute trace
-        $this->setDistributeTrace(new EApmDistributeTrace());
+        $this->setDistributeTrace(EApmContainer::make("distributeTrace"));
         $this->getDistributeTrace()->setComposer($this);
         // middleware
-        $this->setMiddleware(new EApmMiddleware($defaultMiddwareOpts ?? [], $this->getLibrary()));
+        $this->setMiddleware(EApmContainer::make("middleware"));
         $this->getMiddleware()->setDistributeTrace($this->getDistributeTrace());
         $this->getMiddleware()->parseDefaultMiddlewareOptions();
+        //event intake
+        $this->setEventIntake(EApmContainer::make("eventIntake"));
+        $this->getEventIntake()->setComposer($this);
+        // logger
+        $this->setLogger(EApmContainer::make("logger"));
+        $this->getLogger()->setComposer($this);
+        //global agent
+        EApmContainer::bind("GAgent", function() {
+            return $this;
+        });
+    }
+
+    /**
+     * @return void
+     */
+    public function prepareBinds(array $opt) : void
+    {
+        EApmContainer::prepareBinds();
+        EApmContainer::prepareBindMiddleware($opt, $this->getLibrary());
+    }
+
+    /**
+     * @param EApmEventIntake $eventIntake
+     */
+    public function setEventIntake(EApmEventIntake $eventIntake) : void
+    {
+        $this->eventIntake = $eventIntake;
+    }
+
+    /**
+     * @return EApmEventIntake
+     */
+    public function getEventIntake() : EApmEventIntake
+    {
+        return $this->eventIntake;
+    }
+
+    /**
+     * @param EApmLogger $logger
+     */
+    public function setLogger(EApmLogger $logger) : void
+    {
+        $this->logger = $logger;
+    }
+
+    /**
+     * @return EApmLogger
+     */
+    public function getLogger() : EApmLogger
+    {
+        return $this->logger;
     }
 
     /**
@@ -188,15 +272,17 @@ class EApmComposer
      *
      * @return string
      */
-    public function getDefaultTransactionName(): string
+    public function getDefaultTransactionName() : string
     {
         return ($this->getConfiguration("service_name")) . date("YmdH");
     }
 
     /**
      * project invoke
+     * @return void
      */
-    public function EApmUse(callable $call = null) {
+    public function EApmUse(callable $call = null) : void
+    {
         $this->getMiddleware()->middlewareInvoke($call);
     }
 
@@ -205,14 +291,12 @@ class EApmComposer
      */
     public function startNewTransaction(string $name, string $type)
     {
-        if (!is_null($this->currentTransaction) || !$this->getCurrentTransaction()->isStarted()) {
+        if (is_null($this->currentTransaction)) {
             if ($this->getLibrary() == self::DEFAULT_TRANSACTION_LIBRARY) {
-                $this->createNewTransaction($name, $type);
+                $this->currentTransaction = $this->createNewTransaction($name, $type);
             } else {
                 $this->currentTransaction = ElasticApm::beginCurrentTransaction($name, $type);
             }
-            $this->isStarted = true;
-            register_shutdown_function([$this, "endCurrentTransaction"]);
         }
         $this->setTraceResponseHeader();
 
@@ -224,24 +308,25 @@ class EApmComposer
      *
      * @return EApmTransaction
      */
-    public function createNewTransaction(string $name, string $type) : EApmTransaction
+    public function createNewTransaction(string $name, string $type, ?EApmEventBase $parentEvent = null) : EApmTransaction
     {
-        $transaction = new EApmTransaction();
-        $transaction->setName($name);
-        $transaction->setType($type);
-        $transaction->setId(EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::SPANID_LENGTH / 2));
+        $transaction = new EApmTransaction($name, $type, $parentEvent);
+
         // parent trace context
-        if (!$this->getDistributeTrace()->getHasValidTrace()) {
-            $this->getDistributeTrace()->setTraceId(
+        if (is_null($parentEvent) && $this->getDistributeTrace()->getHasValidTrace()) {
+            $transaction->setTraceId($this->getDistributeTrace()->getTraceId());
+            $transaction->setParentId($this->getDistributeTrace()->getParentSpanId());
+        } else {
+            $transaction->setTraceId(
                 EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
             );
         }
-        $transaction->setComposer($this);
-        $this->currentTransaction = $transaction;
+
+        return $transaction;
     }
 
     /**
-     * Gets the ID of the transaction. Transaction ID is a hex encoded 64 random bits (== 8 bytes == 16 hex digits) ID.
+     * Gets the ID of the transaction. Events ID is a hex encoded 64 random bits (== 8 bytes == 16 hex digits) ID.
      *
      * @return string
      */
@@ -289,7 +374,7 @@ class EApmComposer
     }
 
     /**
-     * Get current transaction traceparent info
+     * Get whole current transaction traceparent info
      *
      * @return string
      */
@@ -329,5 +414,32 @@ class EApmComposer
         } elseif ($this->library == self::DEFAULT_TRANSACTION_LIBRARY) {
             return $this->getConfigure()->getConfiguration($configName);
         }
+    }
+
+    /**
+     * Add event
+     * @param EApmEventBase $event
+     * @return void
+     */
+    public function addEvent(EApmEventBase $event) : void
+    {
+        $this->getEventIntake()->addEvent($event);
+    }
+
+    /**
+     * Push all the events to the APM server
+     * @return void
+     */
+    public function eventsPush() : void
+    {
+        $this->getEventIntake()->eventPush();
+    }
+
+    /**
+     * __destructor
+     */
+    public function __destruct()
+    {
+        $this->eventsPush();
     }
 }

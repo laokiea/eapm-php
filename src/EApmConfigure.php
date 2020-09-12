@@ -40,13 +40,22 @@ class EApmConfigure
     private $serviceName;
 
     /**
+     * EApm app config
+     */
+    private $appConfig = array(
+        "loggerFile" => null,
+        "sample_rate" => 1,
+        "environment" => "dev",
+    );
+
+    /**
      * EApmConfigure constructor.
      */
     public function __construct(?string $serverUrl, ?string $secretToken, ?string $serviceName)
     {
-        $this->setServerUrl($serverUrl);
-        $this->setSecretToken($secretToken);
-        $this->setServiceName($serviceName);
+        $this->setServerUrl($serverUrl ?? null);
+        $this->setSecretToken($secretToken ?? null);
+        $this->setServiceName($serviceName ?? null);
     }
 
     /**
@@ -56,7 +65,6 @@ class EApmConfigure
      */
     public static function __callStatic($name, $arguments)
     {
-        // TODO: Implement __callStatic() method.
         return null;
     }
 
@@ -117,5 +125,27 @@ class EApmConfigure
     public function getConfiguration(string $configName) : ?string
     {
         return call_user_func([$this, "get".EApmUtil::wordUppercaseFirst($configName)]);
+    }
+
+    /**
+     * Get app configuration
+     * @param string $appConfigName
+     */
+    public function getAppConfig(string $appConfigName)
+    {
+        return isset($this->appConfig[$appConfigName])
+            ? $this->appConfig[$appConfigName]
+            : null;
+    }
+
+    /**
+     * Set app configuration
+     * @param string $configName
+     * @param $value
+     * @return void
+     */
+    public function setAppConfig(string $configName, $value) : void
+    {
+        $this->appConfig[$configName] = $value;
     }
 }

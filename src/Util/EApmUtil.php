@@ -71,4 +71,20 @@ final class EApmUtil
             return ucfirst($word);
         }, explode($delimiter, $string)));
     }
+
+    /**
+     * Get start time of the incoming request
+     *
+     * @return int
+     */
+    public static function getRequestStartTimestamp() : int
+    {
+        if (isset($_SERVER["REQUEST_TIME_FLOAT"])) {
+            return $_SERVER["REQUEST_TIME_FLOAT"] * 1000000;
+        } elseif (isset($_SERVER["REQUEST_TIME"])) {
+            return $_SERVER["REQUEST_TIME"];
+        } else {
+            return time();
+        }
+    }
 }

@@ -1,0 +1,204 @@
+<?php
+
+/*
+ * This file is part of the laokiea/eapm-php.
+ *
+ * (c) laokiea <sashengpeng@blued.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
+declare(strict_types=1);
+
+namespace EApmPhp;
+
+use EApmPhp\Base\EApmEventBase;
+use RuntimeException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\RequestException;
+
+/**
+ * Class EApmEventIntake
+ * @package EApmPhp
+ */
+class EApmEventIntake
+{
+    /**
+     * Event push v2 endpoint
+     * @const string
+     */
+    private const EVEN_INTAKE_V2_ENDPOINT = "/intake/v2/events";
+
+    /**
+     * Event push content-type header
+     * @const string
+     */
+    private const EVENT_INTAKE_CONTENT_TYPE = "application/x-ndjson";
+
+    /**
+     * Ndjson delimiter
+     * @const string
+     */
+    private const EVENT_INTAKE_NEWLINE_DELIMITED_JSON_DELIMITER = "\n";
+
+    /**
+     * @const float
+     */
+    private const EVENT_PUSH_REQUEST_TIMEOUT = 1.0;
+
+    /**
+     * @const int
+     */
+    private const EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE = 202;
+
+    /**
+     * Guzzle client
+     * @var
+     */
+    private $client = null;
+
+    /**
+     * Events
+     * @var array
+     */
+    private $events = array();
+
+    /**
+     * EApmComposer class object
+     * @var
+     */
+    protected $composer;
+
+    /**
+     * EApmEventIntake constructor.
+     */
+    public function __construct(?EApmComposer $composer = null)
+    {
+        $this->client = $this->getEventClient();
+        if (!is_null($composer)) {
+            $this->setComposer($composer);
+        }
+    }
+
+    /**
+     * Set global composer object
+     *
+     * @param EApmComposer $composer
+     */
+    public function setComposer(EApmComposer $composer): void
+    {
+        $this->composer = $composer;
+    }
+
+    /**
+     * Get global composer object
+     *
+     * @return EApmComposer
+     */
+    public function getComposer(): EApmComposer
+    {
+        return $this->composer;
+    }
+
+    /**
+     * Add an event(transaction/span/error/metadata)
+     * @param EApmEventBase $event
+     */
+    public function addEvent(EApmEventBase $event) : void
+    {
+        if (!$event instanceof \JsonSerializable) {
+            throw new RuntimeException("Event must implements class JsonSerializable.");
+        }
+        $this->events[] = json_encode($event);
+    }
+
+    /**
+     * Return a guzzle client
+     * @return Client
+     */
+    public function getEventClient() : Client
+    {
+        $client = $this->client ?? ($this->client = new Client(["timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT]));
+        return $client;
+    }
+
+    /**
+     * Get event push url
+     *
+     * @return string
+     */
+    public function getEventPushServerUrl() : string
+    {
+        $serverUrl = $this->getComposer()->getConfiguration("server_url");
+        if (is_null($serverUrl)) {
+            throw new RuntimeException("Server Url cannot be null");
+        }
+        if (preg_match("/^.*\/$/", $serverUrl)) {
+            $serverUrl = substr($serverUrl, 0, -1);
+        }
+
+        return $serverUrl . self::EVEN_INTAKE_V2_ENDPOINT;
+    }
+
+    /**
+     * Get intake request body
+     *
+     * @link https://www.elastic.co/guide/en/apm/server/master/example-intake-events.html
+     * @return string
+     */
+    public function getIntakeRequestBody() : string
+    {
+        $ApMSeRvErReQuEsTbOdY = "";
+        foreach ($this->events as $eventNdjson) {
+            $ApMSeRvErReQuEsTbOdY .= $eventNdjson . self::EVENT_INTAKE_NEWLINE_DELIMITED_JSON_DELIMITER;
+        }
+        return $ApMSeRvErReQuEsTbOdY;
+    }
+
+    /**
+     * Get intake request headers
+     *
+     * @link https://github.com/elastic/apm-agent-php/blob/master/src/ext/util_for_PHP.c#L260
+     * @return string
+     */
+    public function getIntakeRequestHeaders() : array
+    {
+        $ApMSeRvErReQuEsThEaDeRs = [
+            "Content-Type" => self::EVENT_INTAKE_CONTENT_TYPE,
+            "User-Agent"   => sprintf("elasticapm-php/%s", EApmComposer::AGENT_VERSION),
+        ];
+
+        if (!is_null($this->getComposer()->getConfiguration("secret_token"))) {
+            $ApMSeRvErReQuEsThEaDeRs["Authorization"] =
+                sprintf("Bearer %s", $this->getComposer()->getConfiguration("secret_token"));
+        }
+
+        return $ApMSeRvErReQuEsThEaDeRs;
+    }
+
+    /**
+     * Send all events to the APM server
+     *
+     * @return bool
+     */
+    public function eventPush() : bool
+    {
+        try {
+            $response = $this->getEventClient()->post($this->getEventPushServerUrl(), [
+                "headers" => $this->getIntakeRequestHeaders(),
+                "body" => $this->getIntakeRequestBody(),
+            ]);
+        } catch (RequestException $exception) {
+            return false;
+        }
+
+        if ($response["accepted"] == self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
+            return true;
+        } else {
+            $this->getComposer()->getLogger()->logWarn("Request Apm Failed: ".$response->getBody());
+            return false;
+        }
+    }
+}

@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace EApmPhp\Transaction;
+namespace EApmPhp\Component;
 
 /**
- * Class EApmSpan
- * @package EApmPhp\Transaction
+ * Class EApmRecorder
+ * @package EApmPhp\Component
  */
-class EApmSpan
+class EApmRecorder
 {
-
+    //TODO: Recorder
 }

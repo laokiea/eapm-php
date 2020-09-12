@@ -32,11 +32,11 @@ class EApmMiddleware {
      */
     protected $defaultMiddlewareOptions = array(
         "parseDistributeHeaders" => true,
-        "EApmExtensionCheck" => true,
+        "EApmExtensionCheck" => false,
     );
 
     /**
-     * Transaction library
+     * Events library
      * @var
      */
     protected $library;
@@ -88,7 +88,7 @@ class EApmMiddleware {
      * EApmMiddleware constructor.
      *
      */
-    public function __construct(array $defaultMiddwareOpts = [], string $library)
+    public function __construct(array $defaultMiddwareOpts = [], ?string $library = null)
     {
         if (!empty($defaultMiddwareOpts)) {
             foreach ($defaultMiddwareOpts as $middlewareName => $opt) {
