@@ -114,7 +114,7 @@ class EApmComposer
      * @param string|null $library
      * @param array|null $defaultMiddwareOpts
      */
-    public function __construct(?array $defaultMiddwareOpts, ?string $library)
+    public function __construct(?array $defaultMiddlewareOpts = null, ?string $library = null)
     {
         $this->prepareBinds($defaultMiddwareOpts ?? []);
         $this->setLibrary($library ?? self::DEFAULT_TRANSACTION_LIBRARY);

@@ -24,7 +24,8 @@ use EApmPhp\Util\EApmUtil;
  * EApm-Php middleware package
  *
  */
-class EApmMiddleware {
+class EApmMiddleware
+{
     /**
      * default middleware options
      *
