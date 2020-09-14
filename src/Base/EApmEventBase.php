@@ -416,13 +416,14 @@ class EApmEventBase
 
         $eVeNtTyPe = $this->getEventType();
         $eVeNtBaSeMeTrIcS = [
-            "id"        => $this->getId(),
-            "eventType" => $eVeNtTyPe,
-            "parentId"  => $this->getParentId() ?? "",
-            "traceId"   => $this->getTraceId(),
-            "ended"     => $this->isEnded(),
-            "started"   => $this->isStarted(),
-            "duration"  => $this->getDuration(),
+            "id"         => $this->getId(),
+            "eventType"  => $eVeNtTyPe,
+            "parentId"   => $this->getParentId() ?? "",
+            "traceId"    => $this->getTraceId(),
+            "ended"      => $this->isEnded(),
+            "started"    => $this->isStarted(),
+            "duration"   => $this->getDuration(),
+            "childEvent" => array(),
         ];
 
         // extra statistic

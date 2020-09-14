@@ -58,17 +58,32 @@ final class EApmLogger
     public function appLogger(string $level, string $msg) : void
     {
         if (!file_exists(self::DEFAULT_LOGGER_PATH)) {
-            mkdir(self::DEFAULT_LOGGER_PATH, true, 0777);
+            mkdir(self::DEFAULT_LOGGER_PATH, 0777, true);
         }
         $loggerFile = $this->getComposer()->getConfigure()->getAppConfig("loggerFile");
         if (is_null($loggerFile)) {
-            $loggerFile = self::DEFAULT_LOGGER_PATH . "eapm-php." . ".$level." . date("Ymd") . ".log";
+            $loggerFile = self::DEFAULT_LOGGER_PATH . "eapm-php." . "$level." . date("Ymd") . ".log";
         }
         file_put_contents($loggerFile, $msg.PHP_EOL, FILE_APPEND);
     }
 
+    /**
+     * Log warning message
+     * @param string $msg
+     * @return void
+     */
     public function logWarn(string $msg) : void
     {
         $this->appLogger("warn", $msg);
+    }
+
+    /**
+     * Log error message
+     * @param string $msg
+     * @return void
+     */
+    public function logError(string $msg) : void
+    {
+        $this->appLogger("error", $msg);
     }
 }

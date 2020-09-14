@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace EApmPhp\Events;
 
+use EApmPhp\Base\EApmContainer;
 use EApmPhp\EApmComposer;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Base\EApmEventBase;
@@ -70,12 +71,19 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
         // transaction/span id
         $this->setId($this->getRandomAndUniqueSpanId());
 
+        $this->setComposer(EApmContainer::make("GAgent"));
         if (!is_null($parentEvent)) {
             $this->setParent($parentEvent);
         } else {
-            $this->setTraceId(
-                EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
-            );
+            if ($this->getComposer()->getDistributeTrace()->getHasValidTrace()) {
+                $this->setTraceId(
+                    $this->getComposer()->getDistributeTrace()->getTraceId()
+                );
+            } else {
+                $this->setTraceId(
+                    EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
+                );
+            }
         }
 
         // parent constructor

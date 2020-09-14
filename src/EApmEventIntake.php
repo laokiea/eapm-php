@@ -191,6 +191,7 @@ class EApmEventIntake
                 "body" => $this->getIntakeRequestBody(),
             ]);
         } catch (RequestException $exception) {
+            $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
             return false;
         }
 
@@ -200,5 +201,19 @@ class EApmEventIntake
             $this->getComposer()->getLogger()->logWarn("Request Apm Failed: ".$response->getBody());
             return false;
         }
+    }
+
+    /**
+     * Send a request to APM server
+     * @return Response
+     */
+    public function pingApmServer() : Response
+    {
+        return $this->getEventClient()->get(
+            $this->getComposer()->getConfiguration("server_url"),
+            [
+                "headers" => $this->getIntakeRequestHeaders(),
+            ]
+        );
     }
 }

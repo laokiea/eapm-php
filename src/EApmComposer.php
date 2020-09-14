@@ -110,6 +110,11 @@ class EApmComposer
     protected $eventIntake;
 
     /**
+     * @var bool
+     */
+    protected $eventPushed = false;
+
+    /**
      * EApmComposer constructor.
      * @param string|null $library
      * @param array|null $defaultMiddwareOpts
@@ -432,7 +437,10 @@ class EApmComposer
      */
     public function eventsPush() : void
     {
-        $this->getEventIntake()->eventPush();
+        if (!$this->eventPushed) {
+            $this->getEventIntake()->eventPush();
+        }
+        $this->eventPushed = true;
     }
 
     /**
@@ -440,6 +448,8 @@ class EApmComposer
      */
     public function __destruct()
     {
-        $this->eventsPush();
+        if (!$this->eventPushed) {
+            $this->eventsPush();
+        }
     }
 }

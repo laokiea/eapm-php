@@ -94,6 +94,6 @@ final class EApmUtil
      */
     public static function getDurationMilliseconds(float $startTime) : int
     {
-        return (microtime(true) - $startTime) * 1000;
+        return intval((microtime(true) - $startTime) * 1000);
     }
 }
