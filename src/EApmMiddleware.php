@@ -17,7 +17,7 @@ use RuntimeException;
 use InvalidArgumentException;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Util\ElasticApmConfigUtil;
-use EApmPhp\Util\EApmUtil;
+use EApmPhp\Util\EApmRequestUtil;
 
 /**
  * Class EApmMiddleware
@@ -151,7 +151,7 @@ class EApmMiddleware
     public function addParseDistributeHeadersMiddleware() : void
     {
         $middleware = function(\Closure $next) {
-            $httpHeaders = EApmUtil::getAllHttpHeaders();
+            $httpHeaders = EApmRequestUtil::getAllHttpHeaders();
             if (isset($httpHeaders[EApmDistributeTrace::ELASTIC_APM_TRACEPARENT_HEADER_NAME])) {
                 //00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01
                 @list(

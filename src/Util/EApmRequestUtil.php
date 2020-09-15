@@ -18,8 +18,13 @@ namespace EApmPhp\Util;
  *
  * @internal
  */
-final class EApmUtil
+final class EApmRequestUtil
 {
+    /**
+     * @const
+     */
+    private const EVENT_DURATION_DECIMAL_POINTS = 3;
+
     /**
      * This function returns all http request headers
      * @return array
@@ -92,8 +97,31 @@ final class EApmUtil
      * Get event duration in MilliSeconds
      * @return int
      */
-    public static function getDurationMilliseconds(float $startTime) : int
+    public static function getDurationMilliseconds(float $startTime) : float
     {
-        return intval((microtime(true) - $startTime) * 1000);
+        return round((microtime(true) - $startTime) * 1000, self::EVENT_DURATION_DECIMAL_POINTS);
+    }
+
+    /**
+     * Get remote address
+     * @return string
+     */
+    public static function getRemoteAddr() : string
+    {
+        $headers = self::getAllHttpHeaders();
+        return $headers["X-Forwarded-For"] ??
+            ($_SERVER["X-Forwarded-For"] ??
+                ($_SERVER["REMOTE_ADDR"] ?? "")
+            );
+    }
+
+    /**
+     * Get raw http url
+     * @return string
+     */
+    public static function getHttpRawUrl() : string
+    {
+        return ($_SERVER["HTTPS"] ? "https" : "http")
+         . "://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
     }
 }

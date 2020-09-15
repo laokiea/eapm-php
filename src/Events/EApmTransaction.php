@@ -17,7 +17,7 @@ use EApmPhp\Base\EApmContainer;
 use EApmPhp\EApmComposer;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Base\EApmEventBase;
-use EApmPhp\Util\EApmUtil;
+use EApmPhp\Util\EApmRequestUtil;
 use EApmPhp\Util\ShutdownFunctionUtil;
 use EApmPhp\Util\EApmRandomIdUtil;
 use EApmPhp\Util\ElasticApmConfigUtil;
@@ -60,6 +60,31 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
     }
 
     /**
+     * transaction result
+     * @var
+     */
+    protected $result;
+
+    /**
+     * get result
+     * @return string
+     */
+    public function getTransactionResult() : string
+    {
+        return $this->result;
+    }
+
+    /**
+     * set result
+     * @return void
+     */
+    public function setTransactionResult(string $result) : string
+    {
+        $this->checkContextFieldLength($result, "");
+        $this->result = $result;
+    }
+
+    /**
      * EApmTransaction constructor.
      */
     public function __construct(string $name, string $type, ?EApmEventBase $parentEvent)
@@ -85,6 +110,8 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
                 );
             }
         }
+        // prepare result
+        $this->setTransactionResult("200");
 
         // parent constructor
         parent::__construct($parentEvent);
@@ -120,7 +147,10 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
     {
         return [
             "transaction" => [
+                "name" => $this->getName(),
+                "type" => $this->getEventType(),
                 "id" => $this->getId(),
+                "timestamp" => $this->getTimestamp(),
                 "trace_id" => $this->getTraceId(),
                 "parent_id" => $this->getParentId(),
                 "sample_rate" => $this->getComposer()->getConfigure()->getAppConfig("sample_rate"),
@@ -128,6 +158,10 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
                     "started" => $this->getStartedSpans(),
                     "dropped" => 0,
                 ],
+                "context" => $this->getEventContext(),
+                "duration" => $this->getDuration(),
+                "result" => $this->getTransactionResult(),
+                "marks" => null,
             ],
         ];
     }

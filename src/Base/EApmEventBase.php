@@ -18,7 +18,7 @@ use EApmPhp\Events\EApmSpan;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Util\EApmRandomIdUtil;
-use EApmPhp\Util\EApmUtil;
+use EApmPhp\Util\EApmRequestUtil;
 
 /**
  * Class EApmEventBase, All transaction/span parent class
@@ -26,6 +26,11 @@ use EApmPhp\Util\EApmUtil;
  */
 class EApmEventBase
 {
+    /**
+     * @const
+     */
+    private const CONTEXT_FIELD_MAX_LENGTH = 1024;
+
     /**
      * Registered events collect
      * @var array
@@ -47,6 +52,7 @@ class EApmEventBase
         "http" => array(),
         "db"   => array(),
         "tags" => array(),
+        "nosql" => array(),
     );
 
     /**
@@ -213,9 +219,9 @@ class EApmEventBase
     /**
      * Set transaction duration
      *
-     * @param int $duration
+     * @param float $duration
      */
-    public function setDuration(int $duration) : void
+    public function setDuration(float $duration) : void
     {
         $this->duration = $duration;
     }
@@ -223,9 +229,9 @@ class EApmEventBase
     /**
      * Get transaction duration
      *
-     * @return int
+     * @return float
      */
-    public function getDuration() : ?int
+    public function getDuration() : ?float
     {
         return $this->duration;
     }
@@ -296,7 +302,7 @@ class EApmEventBase
     public function end() : void
     {
         $this->setEnded();
-        $this->setDuration(EApmUtil::getDurationMilliseconds($this->getTimestamp()));
+        $this->setDuration(EApmRequestUtil::getDurationMilliseconds($this->getTimestamp()));
         $this->updateRegisteredEvent();
         $this->getComposer()->getEventIntake()->addEvent($this);
     }
@@ -305,12 +311,80 @@ class EApmEventBase
      * Any other arbitrary data captured by the agent, optionally provided by the user
      * Include DB, HTTP, TAGS, USERS, see link below for more
      *
-     * @link https://www.elastic.co/guide/en/apm/server/master/span-api.html
+     * @link https://github.com/elastic/apm-server/blob/master/docs/spec/context.json
      * @param array $context
      */
     public function setContext(array $context = []) : void
     {
         $this->context = array_merge_recursive($this->context, $context);
+    }
+
+    /**
+     * Get event context
+     * @return array
+     */
+    public function getEventContext() : array
+    {
+        if ($this->getEventType() === EApmTransaction::EVENT_TYPE) {
+            if (!isset($this->context["request"]) || empty($this->context["request"])) {
+                $this->context["request"] = $this->getRequestContext();
+            }
+        }
+
+        return $this->context;
+    }
+
+    /**
+     * request context
+     * @link https://github.com/elastic/apm-server/blob/master/docs/spec/request.json
+     * @return array
+     */
+    public function getRequestContext() : array
+    {
+        if (!isset($_SERVER)) {
+            return [];
+        }
+
+        $rEqUeStCoNtExT = array();
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $rEqUeStCoNtExT["body"] = empty($_POST)
+                ? json_encode($_POST)
+                : file_get_contents("php://input");
+        }
+        $rEqUeStCoNtExT["env"] = $_SERVER;
+        $rEqUeStCoNtExT["headers"] = EApmRequestUtil::getAllHttpHeaders();
+        $rEqUeStCoNtExT["http_version"] = $_SERVER["SERVER_PROTOCOL"] ?? "";
+        $rEqUeStCoNtExT["method"] = $_SERVER["REQUEST_METHOD"];
+        $rEqUeStCoNtExT["cookies"] = $_COOKIE ?? [];
+        $rEqUeStCoNtExT["socket"] = array(
+            "encrypted" => $_SERVER["HTTPS"] ?? false,
+            "remote_address" => EApmRequestUtil::getRemoteAddr(),
+        );
+        $rEqUeStCoNtExT["url"] = array(
+            "raw" => EApmRequestUtil::getHttpRawUrl(),
+            "protocol" => $_SERVER["HTTPS"] ? "https" : "http",
+            "full" => EApmRequestUtil::getHttpRawUrl(),
+            "hostname" => $_SERVER["SERVER_NAME"],
+            "port" => $_SERVER["SERVER_PORT"],
+            "pathname" => pathinfo($_SERVER["REQUEST_URI"] ?? "")["dirname"],
+            "search" => $_SERVER["QUERY_STRING"] ?? "",
+            "hash" => hash("sha256", EApmRequestUtil::getHttpRawUrl())
+        );
+        array_walk($rEqUeStCoNtExT["url"], [$this, "checkContextFieldLength"]);
+
+        return $rEqUeStCoNtExT;
+    }
+
+    /**
+     * @param $value
+     * @param $key
+     * @return void
+     */
+    public function checkContextFieldLength(&$value, $key) : void
+    {
+        if (mb_strlen($value) > self::CONTEXT_FIELD_MAX_LENGTH) {
+            $value = mb_substr($value, 0, self::CONTEXT_FIELD_MAX_LENGTH - 1) . "…";
+        }
     }
 
     /**
@@ -358,7 +432,7 @@ class EApmEventBase
      *
      * EApmEventBase constructor.
      */
-    public function __construct(?EApmEventBase $parentEvent)
+    public function __construct(?EApmEventBase $parentEvent = null)
     {
         $this->setEventType(static::EVENT_TYPE);
         $this->setComposer(EApmContainer::make("GAgent"));

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace EApmPhp;
 
-use EApmPhp\Util\EApmUtil;
+use EApmPhp\Util\EApmRequestUtil;
 
 /**
  * Class EApmConfigure
@@ -124,7 +124,7 @@ class EApmConfigure
      */
     public function getConfiguration(string $configName) : ?string
     {
-        return call_user_func([$this, "get".EApmUtil::wordUppercaseFirst($configName)]);
+        return call_user_func([$this, "get".EApmRequestUtil::wordUppercaseFirst($configName)]);
     }
 
     /**

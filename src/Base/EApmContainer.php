@@ -17,6 +17,7 @@ use RuntimeException;
 
 /**
  * Class EApmContainer
+ * A simple class container
  * @package EApmPhp\Base
  */
 final class EApmContainer
@@ -61,6 +62,10 @@ final class EApmContainer
         }
     }
 
+    /**
+     * Prepare binding
+     * @return void
+     */
     public static function prepareBinds() : void
     {
         self::bind("distributeTrace", "\EApmPhp\Trace\EApmDistributeTrace");
@@ -68,6 +73,12 @@ final class EApmContainer
         self::bind("logger", "\EApmPhp\Component\EApmLogger");
     }
 
+    /**
+     * Prepare binding a middleware object
+     * @param array $opt
+     * @param string $library
+     * @return void
+     */
     public static function prepareBindMiddleware(array $opt, string $library) : void
     {
         self::bind("middleware", function() use($opt,$library) {

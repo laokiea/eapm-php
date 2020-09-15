@@ -20,7 +20,7 @@ use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Util\ElasticApmConfigUtil;
 use EApmPhp\Util\EApmRandomIdUtil;
-use EApmPhp\Util\EApmUtil;
+use EApmPhp\Util\EApmRequestUtil;
 use Elastic\Apm\TransactionInterface;
 use Elastic\Apm\ElasticApm;
 
@@ -354,7 +354,7 @@ class EApmComposer
             base64_encode($this->getCurrentTransactionSpanId()));
         $tracestate = $this->getDistributeTrace()->getValidTracestate();
 
-        while (EApmUtil::calTracestateLength($tracestate)
+        while (EApmRequestUtil::calTracestateLength($tracestate)
             > EApmDistributeTrace::TRACESTATE_COMBINED_HEADER_MAX_LENGTH) {
             array_pop($tracestate);
         }
@@ -439,8 +439,17 @@ class EApmComposer
     {
         if (!$this->eventPushed) {
             $this->getEventIntake()->eventPush();
+            $this->eventPushed = true;
         }
-        $this->eventPushed = true;
+    }
+
+    /**
+     * Send a request to APM server
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function pingApmServer() : \Psr\Http\Message\ResponseInterface
+    {
+        return $this->getEventIntake()->pingApmServer();
     }
 
     /**
@@ -450,6 +459,7 @@ class EApmComposer
     {
         if (!$this->eventPushed) {
             $this->eventsPush();
+            $this->eventPushed = true;
         }
     }
 }

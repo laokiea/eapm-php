@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace EApmPhp;
 
 use EApmPhp\Base\EApmEventBase;
+use EApmPhp\Events\EApmMetadata;
 use RuntimeException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
@@ -72,6 +73,11 @@ class EApmEventIntake
     protected $composer;
 
     /**
+     * @var bool
+     */
+    protected $metadataSet = false;
+
+    /**
      * EApmEventIntake constructor.
      */
     public function __construct(?EApmComposer $composer = null)
@@ -103,6 +109,22 @@ class EApmEventIntake
     }
 
     /**
+     * @return bool
+     */
+    public function isSetMetadata() : bool
+    {
+        return $this->metadataSet;
+    }
+
+    /**
+     * @return void
+     */
+    public function metadataSated() : void
+    {
+        $this->metadataSet = true;
+    }
+
+    /**
      * Add an event(transaction/span/error/metadata)
      * @param EApmEventBase $event
      */
@@ -112,6 +134,20 @@ class EApmEventIntake
             throw new RuntimeException("Event must implements class JsonSerializable.");
         }
         $this->events[] = json_encode($event);
+    }
+
+    /**
+     * Reset events array after pushing
+     * @return void
+     */
+    public function eventsReset() : void
+    {
+        /*
+        if (count($this->events) > 1) {
+            $this->>events = array_slice($this->events, 0, 1);
+        }
+        */
+        $this->events = array();
     }
 
     /**
@@ -185,6 +221,11 @@ class EApmEventIntake
      */
     public function eventPush() : bool
     {
+        if (!$this->isSetMetadata()) {
+            $this->addEvent(new EApmMetadata(null));
+            $this->metadataSated();
+        }
+
         try {
             $response = $this->getEventClient()->post($this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
@@ -193,6 +234,8 @@ class EApmEventIntake
         } catch (RequestException $exception) {
             $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
             return false;
+        } finally {
+            $this->eventsReset();
         }
 
         if ($response["accepted"] == self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
@@ -205,9 +248,9 @@ class EApmEventIntake
 
     /**
      * Send a request to APM server
-     * @return Response
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    public function pingApmServer() : Response
+    public function pingApmServer() : \Psr\Http\Message\ResponseInterface
     {
         return $this->getEventClient()->get(
             $this->getComposer()->getConfiguration("server_url"),
