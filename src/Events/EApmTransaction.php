@@ -23,6 +23,7 @@ use EApmPhp\Util\EApmRandomIdUtil;
 use EApmPhp\Util\ElasticApmConfigUtil;
 
 /**
+ * Transaction event
  * Class EApmTransaction
  * @package EApmPhp\Events
  */
@@ -32,32 +33,6 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
      * @const
      */
     public const EVENT_TYPE = "transaction";
-
-    /**
-     * Events type
-     * @var
-     */
-    protected $type;
-
-    /**
-     * Set the type of current transaction
-     *
-     * @param string $type
-     */
-    public function setType(string $type) : void
-    {
-        $this->type = $type;
-    }
-
-    /**
-     * Get the type of current transaction
-     *
-     * @return string
-     */
-    public function getType() : string
-    {
-        return $this->type;
-    }
 
     /**
      * transaction result
@@ -92,9 +67,6 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
         $this->setName($name);
         $this->setType($type);
         $this->setStarted();
-        $this->setTimestamp(microtime(true));
-        // transaction/span id
-        $this->setId($this->getRandomAndUniqueSpanId());
 
         $this->setComposer(EApmContainer::make("GAgent"));
         if (!is_null($parentEvent)) {

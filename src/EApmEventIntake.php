@@ -203,7 +203,7 @@ class EApmEventIntake
     {
         $ApMSeRvErReQuEsThEaDeRs = [
             "Content-Type" => self::EVENT_INTAKE_CONTENT_TYPE,
-            "User-Agent"   => sprintf("elasticapm-php/%s", EApmComposer::AGENT_VERSION),
+            "User-Agent"   => sprintf("eapm-php/%s", EApmComposer::AGENT_VERSION),
         ];
 
         if (!is_null($this->getComposer()->getConfiguration("secret_token"))) {

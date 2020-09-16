@@ -25,19 +25,19 @@ class EApmConfigure
      * Elastic apm server url
      * @var
      */
-    private $serverUrl;
+    private $serverUrl = "";
 
     /**
      * Elastic apm secret token
      * @var
      */
-    private $secretToken;
+    private $secretToken = "";
 
     /**
      * Elastic apm service name
      * @var
      */
-    private $serviceName;
+    private $serviceName = null;
 
     /**
      * EApm app config
@@ -46,6 +46,8 @@ class EApmConfigure
         "loggerFile" => null,
         "sample_rate" => 1,
         "environment" => "dev",
+        "service_version" => "v0.0.1",
+        "uid" => null,
     );
 
     /**
@@ -114,6 +116,24 @@ class EApmConfigure
     public function setServerUrl(?string $serverUrl): void
     {
         $this->serverUrl = $serverUrl;
+    }
+
+    /**
+     * Set user id
+     * @param int $userId
+     */
+    public function setUserId(int $userId) : void
+    {
+        $this->setAppConfig("uid", $userId);
+    }
+
+    /**
+     * Get user id
+     * @return int
+     */
+    public function getUserId() : int
+    {
+        return $this->getAppConfig("uid");
     }
 
     /**

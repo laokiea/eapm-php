@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace EApmPhp\Base;
 
 use EApmPhp\EApmComposer;
+use EApmPhp\Events\EApmMetadata;
 use EApmPhp\Events\EApmSpan;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Trace\EApmDistributeTrace;
@@ -45,6 +46,9 @@ class EApmEventBase
 
     /**
      * Events/Span context
+     * Transaction: request, tags
+     * Span: http, db, tags
+     * Others information like service,user will sent from metadata object
      * @var
      */
     protected $context = array(
@@ -52,7 +56,6 @@ class EApmEventBase
         "http" => array(),
         "db"   => array(),
         "tags" => array(),
-        "nosql" => array(),
     );
 
     /**
@@ -71,7 +74,7 @@ class EApmEventBase
      * The trace id of current transaction
      * @var
      */
-    protected $traceId;
+    protected $traceId = null;
 
     /**
      * The Span-Id of current transaction
@@ -114,6 +117,32 @@ class EApmEventBase
      * @var
      */
     protected $isEnded = false;
+
+    /**
+     * Events type
+     * @var
+     */
+    protected $type;
+
+    /**
+     * Set the type of current transaction
+     *
+     * @param string $type
+     */
+    public function setType(string $type) : void
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * Get the type of current transaction
+     *
+     * @return string
+     */
+    public function getType() : string
+    {
+        return $this->type;
+    }
 
 
     /**
@@ -436,13 +465,25 @@ class EApmEventBase
     {
         $this->setEventType(static::EVENT_TYPE);
         $this->setComposer(EApmContainer::make("GAgent"));
+
+        if (!is_null($parentEvent)) {
+            $this->setParent($parentEvent);
+        }
+
+        if ($this->getEventType() !== EApmMetadata::EVENT_TYPE) {
+            $this->setTimestamp(round(microtime(true) * 1e6));
+            $this->setId($this->getRandomAndUniqueSpanId());
+        }
+
         $this->eventRegister($parentEvent);
         register_shutdown_function([$this, "end"]);
     }
 
     /**
      * Set parent Event
+     *
      * @param EApmEventBase $parentEvent
+     * @return void
      */
     public function setParent(EApmEventBase $parentEvent) : void
     {
@@ -474,6 +515,15 @@ class EApmEventBase
             $this->registeredEvents[$this->getId()]["ended"] = $this->isEnded();
             $this->registeredEvents[$this->getId()]["duration"] = $this->getDuration();
         }
+    }
+
+    /**
+     * Get child events span ids
+     * @return array
+     */
+    public function getChildSpanIds() : array
+    {
+        return $this->registeredEvents[$this->getId()]["childEvent"];
     }
 
     /**
@@ -511,6 +561,8 @@ class EApmEventBase
             case EApmSpan::EVENT_TYPE:
                 $eVeNtBaSeMeTrIcS["eventExtra"] = [
                     "name"   => $this->getName(),
+                    "type" => $this->getType(),
+                    "subtype" => $this->getSubtype(),
                     "action" => $this->getAction(),
                 ];
                 break;
@@ -521,7 +573,9 @@ class EApmEventBase
 
         if (!is_null($parentEvent)) {
             $parentId = $parentEvent->getId();
-            $this->registeredEvents[$parentId]["childEvent"] = array();
+            if (!isset($this->registeredEvents[$parentId]["childEvent"])) {
+                $this->registeredEvents[$parentId]["childEvent"] = array();
+            }
             $this->registeredEvents[$parentId]["childEvent"][] = $this->getId();
         }
 

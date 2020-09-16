@@ -59,7 +59,7 @@ class EApmComposer
      * Agent name
      * @const
      */
-    public const AGENT_NAME = "EAPM-PHP";
+    public const AGENT_NAME = "eapm-php";
 
     /**
      * Guzzle client to send event
@@ -220,6 +220,15 @@ class EApmComposer
     }
 
     /**
+     * Add a new middleware
+     * @param \Closure $middleware
+     */
+    public function addMiddleware(\Closure $middleware) : void
+    {
+        $this->getMiddleware()->addMiddleWares($middleware);
+    }
+
+    /**
      * Set configure object
      *
      * @var \EApmPhp\EApmConfigure
@@ -257,6 +266,15 @@ class EApmComposer
     public function getDistributeTrace() : EApmDistributeTrace
     {
         return $this->distributeTrace;
+    }
+
+    /**
+     * Set user id
+     * @param int $userId
+     */
+    public function setUserId(int $userId) : void
+    {
+        $this->getConfigure()->setUserId($userId);
     }
 
     /**
@@ -437,6 +455,10 @@ class EApmComposer
      */
     public function eventsPush() : void
     {
+        if (is_null($this->getConfigure())) {
+            $this->setConfigure(new EApmConfigure("", "", "eapm-php-project"));
+        }
+
         if (!$this->eventPushed) {
             $this->getEventIntake()->eventPush();
             $this->eventPushed = true;
