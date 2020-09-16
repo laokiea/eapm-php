@@ -80,7 +80,7 @@ class EApmEventBase
      * The Span-Id of current transaction
      * @var
      */
-    protected $id;
+    protected $id = null;
 
     /**
      * Current event type
@@ -160,7 +160,7 @@ class EApmEventBase
      *
      * @return string
      */
-    public function getTraceId() : string
+    public function getTraceId() : ?string
     {
         return $this->traceId;
     }
@@ -200,7 +200,7 @@ class EApmEventBase
      *
      * @return string
      */
-    public function getId() : string
+    public function getId() : ?string
     {
         return $this->id;
     }
@@ -354,13 +354,21 @@ class EApmEventBase
      */
     public function getEventContext() : array
     {
-        if ($this->getEventType() === EApmTransaction::EVENT_TYPE) {
-            if (!isset($this->context["request"]) || empty($this->context["request"])) {
-                $this->context["request"] = $this->getRequestContext();
+        $context = $this->context;
+
+        foreach ($context as $contextField => $contextObject) {
+            if (empty($contextObject)) {
+                unset($context[$contextField]);
             }
         }
 
-        return $this->context;
+        if ($this->getEventType() === EApmTransaction::EVENT_TYPE) {
+            if (!isset($context["request"]) || empty($context["request"])) {
+                $context["request"] = $this->getRequestContext();
+            }
+        }
+
+        return $context;
     }
 
     /**
@@ -370,7 +378,7 @@ class EApmEventBase
      */
     public function getRequestContext() : array
     {
-        if (!isset($_SERVER)) {
+        if (!isset($_SERVER) || !isset($_SERVER["REQUEST_METHOD"])) {
             return [];
         }
 
@@ -473,10 +481,10 @@ class EApmEventBase
         if ($this->getEventType() !== EApmMetadata::EVENT_TYPE) {
             $this->setTimestamp(round(microtime(true) * 1e6));
             $this->setId($this->getRandomAndUniqueSpanId());
+            register_shutdown_function([$this, "end"]);
         }
 
         $this->eventRegister($parentEvent);
-        register_shutdown_function([$this, "end"]);
     }
 
     /**
@@ -540,10 +548,10 @@ class EApmEventBase
 
         $eVeNtTyPe = $this->getEventType();
         $eVeNtBaSeMeTrIcS = [
-            "id"         => $this->getId(),
+            "id"         => $this->getId() ?? "",
             "eventType"  => $eVeNtTyPe,
             "parentId"   => $this->getParentId() ?? "",
-            "traceId"    => $this->getTraceId(),
+            "traceId"    => $this->getTraceId() ?? "",
             "ended"      => $this->isEnded(),
             "started"    => $this->isStarted(),
             "duration"   => $this->getDuration(),

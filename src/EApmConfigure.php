@@ -131,7 +131,7 @@ class EApmConfigure
      * Get user id
      * @return int
      */
-    public function getUserId() : int
+    public function getUserId() : ?int
     {
         return $this->getAppConfig("uid");
     }

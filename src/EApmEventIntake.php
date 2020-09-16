@@ -128,12 +128,17 @@ class EApmEventIntake
      * Add an event(transaction/span/error/metadata)
      * @param EApmEventBase $event
      */
-    public function addEvent(EApmEventBase $event) : void
+    public function addEvent(EApmEventBase $event, $preinsert = false) : void
     {
         if (!$event instanceof \JsonSerializable) {
             throw new RuntimeException("Event must implements class JsonSerializable.");
         }
-        $this->events[] = json_encode($event);
+
+        if (!$preinsert) {
+            $this->events[] = json_encode($event);
+        } else {
+            array_unshift($this->events, json_encode($event));
+        }
     }
 
     /**
@@ -171,6 +176,7 @@ class EApmEventIntake
         if (is_null($serverUrl)) {
             throw new RuntimeException("Server Url cannot be null");
         }
+
         if (preg_match("/^.*\/$/", $serverUrl)) {
             $serverUrl = substr($serverUrl, 0, -1);
         }
@@ -222,7 +228,7 @@ class EApmEventIntake
     public function eventPush() : bool
     {
         if (!$this->isSetMetadata()) {
-            $this->addEvent(new EApmMetadata(null));
+            $this->addEvent(new EApmMetadata(null), true);
             $this->metadataSated();
         }
 
@@ -238,10 +244,10 @@ class EApmEventIntake
             $this->eventsReset();
         }
 
-        if ($response["accepted"] == self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
+        if ($response->getStatusCode() == self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
             return true;
         } else {
-            $this->getComposer()->getLogger()->logWarn("Request Apm Failed: ".$response->getBody());
+            $this->getComposer()->getLogger()->logWarn("Request Apm Failed: ".$response->getBody()->getContents());
             return false;
         }
     }

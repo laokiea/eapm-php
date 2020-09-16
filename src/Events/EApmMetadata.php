@@ -59,7 +59,7 @@ class EApmMetadata extends EApmEventBase implements \JsonSerializable
                 ],
                 "process" => [
                     "pid" => getmypid(),
-                    "title" => PHP_SAPI == "cli" ? cli_get_process_title() : "",
+                    "title" => PHP_SAPI == "cli" ? @cli_get_process_title() : "",
                     "argv" => $argv,
                 ],
                 "system" => [

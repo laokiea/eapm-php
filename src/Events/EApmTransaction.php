@@ -53,7 +53,7 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
      * set result
      * @return void
      */
-    public function setTransactionResult(string $result) : string
+    public function setTransactionResult(string $result)
     {
         $this->checkContextFieldLength($result, "");
         $this->result = $result;
@@ -120,7 +120,7 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
         return [
             "transaction" => [
                 "name" => $this->getName(),
-                "type" => $this->getEventType(),
+                "type" => $this->getType(),
                 "id" => $this->getId(),
                 "timestamp" => $this->getTimestamp(),
                 "trace_id" => $this->getTraceId(),
