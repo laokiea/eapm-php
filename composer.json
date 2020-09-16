@@ -12,7 +12,7 @@
     "homepage": "https://git.blued.cn/sashengpeng/eapm-php",
     "require": {
         "guzzlehttp/guzzle": "6.*",
-        "php":">=7.0.*",
+        "php":">=7.0.0",
         "ext-json": "*",
         "ext-mbstring": "*"
     },
