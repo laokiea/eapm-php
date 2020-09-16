@@ -158,7 +158,7 @@ class EApmEventBase
     /**
      * Get the Trace-Id of current event
      *
-     * @return string
+     * @return string|null
      */
     public function getTraceId() : ?string
     {
@@ -198,7 +198,7 @@ class EApmEventBase
     /**
      * Get the Span-Id of current event
      *
-     * @return string
+     * @return string|null
      */
     public function getId() : ?string
     {
@@ -218,7 +218,7 @@ class EApmEventBase
     /**
      * Get the Parent-Span-Id of current transaction
      *
-     * @return string
+     * @return string|null
      */
     public function getParentId() : ?string
     {
@@ -258,7 +258,7 @@ class EApmEventBase
     /**
      * Get transaction duration
      *
-     * @return float
+     * @return float|null
      */
     public function getDuration() : ?float
     {
@@ -374,12 +374,12 @@ class EApmEventBase
     /**
      * request context
      * @link https://github.com/elastic/apm-server/blob/master/docs/spec/request.json
-     * @return array
+     * @return array|null
      */
-    public function getRequestContext() : array
+    public function getRequestContext() : ?array
     {
         if (!isset($_SERVER) || !isset($_SERVER["REQUEST_METHOD"])) {
-            return [];
+            return null;
         }
 
         $rEqUeStCoNtExT = array();

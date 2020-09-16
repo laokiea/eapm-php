@@ -310,6 +310,16 @@ class EApmComposer
     }
 
     /**
+     * Set app configuration
+     * @param string $configName
+     * @param $configValue
+     */
+    public function setAppConfig(string $configName, $configValue) : void
+    {
+        $this->getConfigure()->setAppConfig($configName, $configValue);
+    }
+
+    /**
      * Start new transaction
      */
     public function startNewTransaction(string $name, string $type)

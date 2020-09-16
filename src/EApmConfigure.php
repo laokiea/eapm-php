@@ -164,8 +164,8 @@ class EApmConfigure
      * @param $value
      * @return void
      */
-    public function setAppConfig(string $configName, $value) : void
+    public function setAppConfig(string $configName, $configValue) : void
     {
-        $this->appConfig[$configName] = $value;
+        $this->appConfig[$configName] = $configValue;
     }
 }

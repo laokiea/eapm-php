@@ -99,7 +99,7 @@ final class EApmRequestUtil
      */
     public static function getDurationMilliseconds(float $startTime) : float
     {
-        return round((microtime(true) - $startTime) * 1000, self::EVENT_DURATION_DECIMAL_POINTS);
+        return round((microtime(true) * 1e6 - $startTime) / 1000, self::EVENT_DURATION_DECIMAL_POINTS);
     }
 
     /**

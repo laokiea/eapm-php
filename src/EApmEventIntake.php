@@ -239,6 +239,9 @@ class EApmEventIntake
             ]);
         } catch (RequestException $exception) {
             $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
+            if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
+               echo \GuzzleHttp\Psr7\str($exception->getResponse());
+            }
             return false;
         } finally {
             $this->eventsReset();
