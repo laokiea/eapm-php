@@ -111,7 +111,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "name" => $this->getName(),
                 "duration" => $this->getDuration(),
                 "stacktrace" => null,
-                "sync" => false,
+                "sync" => true,
                 "sample_rate" => $this->getComposer()->getConfigure()->getAppConfig("sample_rate"),
             ],
         );

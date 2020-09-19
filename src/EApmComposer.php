@@ -424,7 +424,7 @@ class EApmComposer
      */
     public function setTraceResponseHeader() : void
     {
-        header("traceresponse: " . $this->getDistributeTrace()->getTraceResponseHeader());
+        @header("traceresponse: " . $this->getDistributeTrace()->getTraceResponseHeader());
     }
 
     /**

@@ -384,7 +384,7 @@ class EApmEventBase
      *
      * @return array
      */
-    public function getEventContext() : array
+    public function getEventContext() : ?array
     {
         $context = $this->context;
 
@@ -400,7 +400,7 @@ class EApmEventBase
             }
         }
 
-        return $context;
+        return !empty($context) ? $context : null;
     }
 
     /**

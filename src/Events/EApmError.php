@@ -83,9 +83,31 @@ class EApmError extends EApmEventBase implements \JsonSerializable
             "code" => $this->getError()->getCode(),
             "message" => $this->getError()->getMessage(),
             "module" => $this->getError()->getFile(),
-            "stacktrace" => $this->getError()->getTrace(),
+            "stacktrace" => $this->getErrorStackTrace(),
             "type" => $this->getErrorType(),
         );
+    }
+
+    /**
+     * Get error stack trace
+     * @return array|null
+     */
+    public function getErrorStackTrace() : ?array
+    {
+        $errorStackTrace = [];
+        foreach ($this->getError()->getTrace() as $fc => $oriTrace) {
+            $errorStackTrace[] = [
+                "abs_path" => $oriTrace["file"],
+                "colno" => $fc,
+                "filename" => basename($oriTrace["file"]),
+                "classname" => $oriTrace["class"] ?? "",
+                "function" => $oriTrace["function"] ?? "",
+                "lineno" => $oriTrace["line"],
+                "module" => $oriTrace["class"] ?? "",
+            ];
+        }
+
+        return !empty($errorStackTrace) ? $errorStackTrace : null;
     }
 
     /**
