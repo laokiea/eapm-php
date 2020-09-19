@@ -36,7 +36,7 @@ class EApmEventBase
      * Registered events collect
      * @var array
      */
-    protected $registeredEvents = [];
+    protected static $registeredEvents = [];
 
     /**
      * Registered events stat
@@ -359,7 +359,7 @@ class EApmEventBase
      */
     public function end() : void
     {
-        if ($this->isEnded()) {
+        if (!$this->isEnded()) {
             $this->setEnded();
             $this->setDuration(EApmRequestUtil::getDurationMilliseconds($this->getTimestamp()));
             $this->updateRegisteredEvent();
@@ -504,6 +504,11 @@ class EApmEventBase
      */
     public function setIsRootEvent() : void
     {
+        foreach (self::$registeredEvents as $event) {
+            if ($event["is_root"]) {
+                return;
+            }
+        }
         $this->isRoot = true;
     }
 
@@ -536,7 +541,7 @@ class EApmEventBase
     {
         do {
             $spanId = EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::SPANID_LENGTH / 2);
-        } while(in_array($spanId, array_keys($this->registeredEvents)));
+        } while(in_array($spanId, array_keys(self::$registeredEvents)));
         return $spanId;
     }
 
@@ -546,10 +551,11 @@ class EApmEventBase
      */
     public function updateRegisteredEvent() : void
     {
-        if (isset($this->registeredEvents[$this->getId()])) {
-            $this->registeredEvents[$this->getId()]["started"] = $this->isStarted();
-            $this->registeredEvents[$this->getId()]["ended"] = $this->isEnded();
-            $this->registeredEvents[$this->getId()]["duration"] = $this->getDuration();
+        if (isset(self::$registeredEvents[$this->getId()])) {
+            self::$registeredEvents[$this->getId()]["started"] = $this->isStarted();
+            self::$registeredEvents[$this->getId()]["ended"] = $this->isEnded();
+            self::$registeredEvents[$this->getId()]["duration"] = $this->getDuration();
+            self::$registeredEvents[$this->getId()]["is_root"] = $this->getIsRootEvent();
         }
     }
 
@@ -559,7 +565,22 @@ class EApmEventBase
      */
     public function getChildSpanIds() : array
     {
-        return $this->registeredEvents[$this->getId()]["childEvent"];
+        return self::$registeredEvents[$this->getId()]["childEvent"];
+    }
+
+    /**
+     * Get Root transaction id
+     * @return string
+     */
+    public function getEventTransactionId() : string
+    {
+        $recursiveEventId = $this->getId();
+        while(!self::$registeredEvents[$recursiveEventId]["is_root"]
+            && !is_null(self::$registeredEvents[$recursiveEventId]["parentId"])) {
+            $recursiveEventId = self::$registeredEvents[$recursiveEventId]["parentId"];
+        }
+
+        return $recursiveEventId;
     }
 
     /**
@@ -610,13 +631,13 @@ class EApmEventBase
 
         if (!is_null($parentEvent)) {
             $parentId = $parentEvent->getId();
-            if (!isset($this->registeredEvents[$parentId]["childEvent"])) {
-                $this->registeredEvents[$parentId]["childEvent"] = array();
+            if (!isset(self::$registeredEvents[$parentId]["childEvent"])) {
+                self::$registeredEvents[$parentId]["childEvent"] = array();
             }
-            $this->registeredEvents[$parentId]["childEvent"][] = $this->getId();
+            self::$registeredEvents[$parentId]["childEvent"][] = $this->getId();
         }
 
-        $this->registeredEvents[$this->getId()] = $eVeNtBaSeMeTrIcS;
+        self::$registeredEvents[$this->getId()] = $eVeNtBaSeMeTrIcS;
     }
 
     /**
@@ -638,11 +659,11 @@ class EApmEventBase
     public function getChildEventStat(string $spanId) : array
     {
         $childEventStat = [];
-        $eventRegistered = $this->registeredEvents[$spanId];
+        $eventRegistered = self::$registeredEvents[$spanId];
 
         if ($childSpanId = $eventRegistered["childEvent"]) {
             foreach ($childSpanId as $spanId) {
-                $childEventStat[] = $this->registeredEvents[$spanId];
+                $childEventStat[] = self::$registeredEvents[$spanId];
             }
         }
 
@@ -655,7 +676,7 @@ class EApmEventBase
     public function getParentEventStat(string $spanId) : array
     {
         static $parentEventStat = [];
-        $eventRegistered = $this->registeredEvents[$spanId];
+        $eventRegistered = self::$registeredEvents[$spanId];
 
         if ($eventRegistered["parentId"]) {
             $parentEventStat = $this->getParentEventStat($eventRegistered["parentId"]);

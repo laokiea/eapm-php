@@ -116,7 +116,7 @@ class EApmError extends EApmEventBase implements \JsonSerializable
         return [
             "error" => [
                 "id" => $this->getId(),
-                "transaction_id" => $this->getParentId(),
+                "transaction_id" => $this->getEventTransactionId(),
                 "trace_id" => $this->getTraceId(),
                 "parent_id" => $this->getParentId(),
                 "transaction" => [

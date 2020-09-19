@@ -76,6 +76,9 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
                 $this->setTraceId(
                     $this->getComposer()->getDistributeTrace()->getTraceId()
                 );
+                $this->setParentId(
+                    $this->getComposer()->getDistributeTrace()->getParentSpanId()
+                );
             } else {
                 $this->setTraceId(
                     EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
@@ -96,8 +99,8 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
     public function getStartedSpans() : int
     {
         $recordedSpansCount = 0;
-        if (empty($this->registeredEvents)) {
-            foreach ($this->registeredEvents as $event) {
+        if (empty(self::$registeredEvents)) {
+            foreach (self::$registeredEvents as $event) {
                 if (($event["started"]
                     ||
                     ($event["ended"] && $event["duration"] > 0)

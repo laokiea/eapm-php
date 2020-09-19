@@ -49,7 +49,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      * Get action of th span
      * @return string
      */
-    public function getAction() : string
+    public function getAction() : ?string
     {
         return $this->action;
     }
@@ -101,7 +101,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "type" => $this->getType(),
                 "subtype" => $this->getSubtype(),
                 "id" => $this->getId(),
-                "transaction_id" => $this->getParentId(),
+                "transaction_id" => $this->getEventTransactionId(),
                 "trace_id" => $this->getTraceId(),
                 "parent_id" => $this->getParentId(),
                 "child_ids" => $this->getChildSpanIds(),

@@ -348,6 +348,7 @@ class EApmComposer
         }
         $this->setTraceResponseHeader();
         $this->currentTransaction->setIsRootEvent();
+        $this->currentTransaction->updateRegisteredEvent();
 
         return $this->currentTransaction;
     }
