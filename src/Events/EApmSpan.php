@@ -34,7 +34,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     /**
      * @var
      */
-    protected $subtype;
+    protected $subtype = "";
 
     /**
      * Set action of the span
@@ -72,6 +72,13 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
         return $this->subtype;
     }
 
+    /**
+     * EApmSpan constructor.
+     * @param string $name
+     * @param string $type
+     * @param string $subtype
+     * @param EApmEventBase $parentEvent
+     */
     public function __construct(string $name, string $type, string $subtype, EApmEventBase $parentEvent)
     {
         $this->setName($name);

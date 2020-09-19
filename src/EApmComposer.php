@@ -16,6 +16,7 @@ namespace EApmPhp;
 use EApmPhp\Base\EApmContainer;
 use EApmPhp\Base\EApmEventBase;
 use EApmPhp\Component\EApmLogger;
+use EApmPhp\Events\EApmError;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Util\ElasticApmConfigUtil;
@@ -270,7 +271,10 @@ class EApmComposer
 
     /**
      * Set user id
+     *
      * @param int $userId
+     *
+     * @return void
      */
     public function setUserId(int $userId) : void
     {
@@ -279,7 +283,6 @@ class EApmComposer
 
     /**
      * Get current transaction object
-     *
      */
     public function getCurrentTransaction()
     {
@@ -302,17 +305,23 @@ class EApmComposer
 
     /**
      * project invoke
+     *
+     * @param callable $call|null
+     *
      * @return void
      */
-    public function EApmUse(callable $call = null) : void
+    public function EApmUse(?callable $call = null) : void
     {
         $this->getMiddleware()->middlewareInvoke($call);
     }
 
     /**
      * Set app configuration
+     *
      * @param string $configName
      * @param $configValue
+     *
+     * @return void
      */
     public function setAppConfig(string $configName, $configValue) : void
     {
@@ -320,7 +329,13 @@ class EApmComposer
     }
 
     /**
-     * Start new transaction
+     * Start a new transaction.
+     * This new transaction offer a whole-life Trace-Id
+     *
+     * @param string $name
+     * @param string $type
+     *
+     * @return EApmTransaction
      */
     public function startNewTransaction(string $name, string $type)
     {
@@ -332,12 +347,17 @@ class EApmComposer
             }
         }
         $this->setTraceResponseHeader();
+        $this->currentTransaction->setIsRootEvent();
 
         return $this->currentTransaction;
     }
 
     /**
      * Create a new transaction
+     *
+     * @param string $name
+     * @param string $type
+     * @param EApmEventBase|null $parentEvent
      *
      * @return EApmTransaction
      */
@@ -436,7 +456,22 @@ class EApmComposer
     }
 
     /**
-     * Get apm configuration
+     * Capture a new Throwable error|exception
+     *
+     * @param \Throwable $error
+     * @param EApmEventBase $parentEvent
+     *
+     * @return void
+     */
+    public function captureError(\Throwable $error, EApmEventBase $parentEvent) : void
+    {
+        $this->addEvent(new EApmError($error, $parentEvent));
+    }
+
+    /**
+     * Get the specific APM configuration.
+     *
+     * @param string $configName
      *
      * @return string
      */
@@ -450,8 +485,11 @@ class EApmComposer
     }
 
     /**
-     * Add event
+     * Add a new APM event object.
+     * These events will be sent to APM server.
+
      * @param EApmEventBase $event
+     *
      * @return void
      */
     public function addEvent(EApmEventBase $event) : void
@@ -460,7 +498,8 @@ class EApmComposer
     }
 
     /**
-     * Push all the events to the APM server
+     * Push all the events to the APM server.
+     *
      * @return void
      */
     public function eventsPush() : void
@@ -476,7 +515,8 @@ class EApmComposer
     }
 
     /**
-     * Send a request to APM server
+     * Send all the events to APM server
+     *
      * @return \Psr\Http\Message\ResponseInterface
      */
     public function pingApmServer() : \Psr\Http\Message\ResponseInterface

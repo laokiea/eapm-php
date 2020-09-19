@@ -125,6 +125,35 @@ class EApmEventBase
     protected $type;
 
     /**
+     * @var
+     */
+    protected $isRoot = false;
+
+    /**
+     * Parent constructor
+     *
+     * EApmEventBase constructor.
+     */
+    public function __construct(?EApmEventBase $parentEvent = null)
+    {
+        $this->setEventType(static::EVENT_TYPE);
+        $this->setComposer(EApmContainer::make("GAgent"));
+
+        if (!is_null($parentEvent)) {
+            $this->setParent($parentEvent);
+        }
+
+        if ($this->getEventType() !== EApmMetadata::EVENT_TYPE) {
+            $this->setTimestamp(round(microtime(true) * 1e6));
+            $this->setId($this->getRandomAndUniqueSpanId());
+            register_shutdown_function([$this, "end"]);
+        }
+
+        $this->eventRegister($parentEvent);
+    }
+
+
+    /**
      * Set the type of current transaction
      *
      * @param string $type
@@ -294,7 +323,7 @@ class EApmEventBase
     }
 
     /**
-     * Current event is started
+     * Current event is ended
      *
      * @return bool
      */
@@ -330,10 +359,12 @@ class EApmEventBase
      */
     public function end() : void
     {
-        $this->setEnded();
-        $this->setDuration(EApmRequestUtil::getDurationMilliseconds($this->getTimestamp()));
-        $this->updateRegisteredEvent();
-        $this->getComposer()->getEventIntake()->addEvent($this);
+        if ($this->isEnded()) {
+            $this->setEnded();
+            $this->setDuration(EApmRequestUtil::getDurationMilliseconds($this->getTimestamp()));
+            $this->updateRegisteredEvent();
+            $this->getComposer()->getEventIntake()->addEvent($this);
+        }
     }
 
     /**
@@ -350,6 +381,7 @@ class EApmEventBase
 
     /**
      * Get event context
+     *
      * @return array
      */
     public function getEventContext() : array
@@ -372,7 +404,8 @@ class EApmEventBase
     }
 
     /**
-     * request context
+     * Request context
+     *
      * @link https://github.com/elastic/apm-server/blob/master/docs/spec/request.json
      * @return array|null
      */
@@ -465,26 +498,21 @@ class EApmEventBase
     }
 
     /**
-     * Parent constructor
+     * Set event as a root event
      *
-     * EApmEventBase constructor.
+     * @return void
      */
-    public function __construct(?EApmEventBase $parentEvent = null)
+    public function setIsRootEvent() : void
     {
-        $this->setEventType(static::EVENT_TYPE);
-        $this->setComposer(EApmContainer::make("GAgent"));
+        $this->isRoot = true;
+    }
 
-        if (!is_null($parentEvent)) {
-            $this->setParent($parentEvent);
-        }
-
-        if ($this->getEventType() !== EApmMetadata::EVENT_TYPE) {
-            $this->setTimestamp(round(microtime(true) * 1e6));
-            $this->setId($this->getRandomAndUniqueSpanId());
-            register_shutdown_function([$this, "end"]);
-        }
-
-        $this->eventRegister($parentEvent);
+    /**
+     * @return bool
+     */
+    public function getIsRootEvent() : bool
+    {
+        return $this->isRoot;
     }
 
     /**
@@ -548,6 +576,7 @@ class EApmEventBase
 
         $eVeNtTyPe = $this->getEventType();
         $eVeNtBaSeMeTrIcS = [
+            "is_root"    => $this->getIsRootEvent(),
             "id"         => $this->getId() ?? "",
             "eventType"  => $eVeNtTyPe,
             "parentId"   => $this->getParentId() ?? "",
@@ -610,11 +639,13 @@ class EApmEventBase
     {
         $childEventStat = [];
         $eventRegistered = $this->registeredEvents[$spanId];
+
         if ($childSpanId = $eventRegistered["childEvent"]) {
             foreach ($childSpanId as $spanId) {
                 $childEventStat[] = $this->registeredEvents[$spanId];
             }
         }
+
         return $childEventStat;
     }
 
@@ -625,10 +656,12 @@ class EApmEventBase
     {
         static $parentEventStat = [];
         $eventRegistered = $this->registeredEvents[$spanId];
+
         if ($eventRegistered["parentId"]) {
             $parentEventStat = $this->getParentEventStat($eventRegistered["parentId"]);
         }
         array_unshift($parentEventStat, $eventRegistered);
+
         return $parentEventStat;
     }
 }

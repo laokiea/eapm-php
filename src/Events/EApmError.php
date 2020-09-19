@@ -13,16 +13,98 @@ declare(strict_types=1);
 
 namespace EApmPhp\Events;
 
+use EApmPhp\Base\EApmEventBase;
+
 /**
  * Class EApmError
  * @package EApmPhp\Events
  */
-class EApmError implements \JsonSerializable
+class EApmError extends EApmEventBase implements \JsonSerializable
 {
     /**
      * @const
      */
     public const EVENT_TYPE = "error";
+
+    /**
+     * @var
+     */
+    private $error;
+
+    /**
+     * Get capture error
+     * @return \Throwable
+     */
+    public function getError() : \Throwable
+    {
+        return $this->error;
+    }
+
+    /**
+     * Set capture error
+     * @param \Throwable $error
+     */
+    public function setError(\Throwable $error)
+    {
+        $this->error = $error;
+    }
+
+    /**
+     * EApmError constructor.
+     * @param \Throwable $error
+     * @param EApmEventBase|null $parentEvent
+     */
+    public function __construct(\Throwable $error, EApmEventBase $parentEvent)
+    {
+        $this->setError($error);
+        parent::__construct($parentEvent);
+    }
+
+    /**
+     * get culprit context
+     * @return string
+     */
+    public function getCulpritContext() : string
+    {
+        return sprintf("File: %s, Line: %s",
+        $this->getError()->getFile(),
+        $this->getError()->getLine()
+        );
+    }
+
+    /**
+     * Get error exception context
+     * @return array
+     * @throws \ReflectionException
+     */
+    public function getExceptionContext() : array
+    {
+        return array(
+            "code" => $this->getError()->getCode(),
+            "message" => $this->getError()->getMessage(),
+            "module" => $this->getError()->getFile(),
+            "stacktrace" => $this->getError()->getTrace(),
+            "type" => $this->getErrorType(),
+        );
+    }
+
+    /**
+     * Get error type
+     * @return string
+     * @throws \ReflectionException
+     */
+    public function getErrorType() : string
+    {
+        $error = $this->getError();
+        $errorType = (new \ReflectionClass($error))->getName();
+        $previousError = $error->getPrevious();
+        while(!is_null($previousError)) {
+            $errorType = (new \ReflectionClass($previousError))->getName() . "-$errorType";
+            $previousError = $previousError->getPrevious();
+        }
+
+        return $errorType;
+    }
 
     /**
      * Json serialize transaction event object
@@ -31,6 +113,20 @@ class EApmError implements \JsonSerializable
      */
     public function jsonSerialize()
     {
-
+        return [
+            "error" => [
+                "id" => $this->getId(),
+                "transaction_id" => $this->getParentId(),
+                "trace_id" => $this->getTraceId(),
+                "parent_id" => $this->getParentId(),
+                "transaction" => [
+                    "sampled" => true,
+                    "type" => "request",
+                ],
+                "context" => $this->getEventContext(),
+                "culprit" => $this->getCulpritContext(),
+                "exception" => $this->getExceptionContext(),
+            ],
+        ];
     }
 }
