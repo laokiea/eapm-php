@@ -15,6 +15,7 @@ namespace EApmPhp\Events;
 
 use EApmPhp\Base\EApmEventBase;
 use RuntimeException;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class EApmSpan
@@ -97,9 +98,9 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      * @param string $url
      * @param array $options
      *
-     * @return array
+     * @return array|boolean
      */
-    public function startHttpTypeSpan(string $method, string $url, array $options = []) : array
+    public function startHttpTypeSpan(string $method, string $url, array $options = [])
     {
         if (!preg_match("/^https?:\/\/.*$/", $url)) {
             $url = "http://" . $url;
@@ -113,13 +114,18 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
             $options["verify"] = false;
         }
 
-        $response = $this->getComposer()->getEventIntake()->getEventClient()->request(
-            $method,
-            $url,
-            $options
-        );
-        $this->end();
+        try {
+            $response = $this->getComposer()->getEventIntake()->getEventClient()->request(
+                $method,
+                $url,
+                $options
+            );
+        } catch (RequestException $exception) {
+            $this->getComposer()->captureError($exception, $this);
+            return false;
+        }
 
+        $this->end();
         $this->setContext([
             "http" => [
                 "url" => $url,
@@ -145,6 +151,14 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startRedisTypeSpan(\Redis $redis, string $command, ...$args)
     {
+        try {
+            $result = call_user_func_array([$redis, $command], $args);
+        } catch (\RedisException $exception) {
+            $this->getComposer()->captureError($exception, $this);
+            return false;
+        }
+
+        $this->end();
         $this->setContext([
             "db" => [
                 "instance"  => $this->getSubtype(),
@@ -152,8 +166,6 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "type"      => "command",
             ],
         ]);
-        $result = call_user_func_array([$redis, $command], $args);
-        $this->end();
 
         return $result;
     }
