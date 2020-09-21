@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace EApmPhp\Events;
 
 use EApmPhp\Base\EApmEventBase;
+use RuntimeException;
 
 /**
  * Class EApmSpan
@@ -86,6 +87,53 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
         $this->setSubtype($subtype);
 
         parent::__construct($parentEvent);
+    }
+
+    /**
+     * Start http request
+     * options example ["timeout" => 1.0,"verify" => false,"headers"=>[],"json"=>[]]
+     *
+     * @param string $method
+     * @param string $url
+     * @param array $options
+     *
+     * @return array
+     */
+    public function startHttpTypeSpan(string $method, string $url, array $options = []) : array
+    {
+        if (!preg_match("/^https?:\/\/.*$/", $url)) {
+            $url = "http://" . $url;
+        }
+
+        $aPmReQuEsTHeAdErS = $this->getComposer()->getNextRequestTraceHeaders();
+        if (isset($options["headers"])) {
+            $options["headers"] = array_merge($options["headers"],
+                $aPmReQuEsTHeAdErS);
+        }
+
+        if (!isset($options["verify"])) {
+            $options["verify"] = false;
+        }
+
+        $response = $this->getComposer()->getEventIntake()->getEventClient()->request(
+            $method,
+            $url,
+            $options
+        );
+
+        $this->setContext([
+            "http" => [
+                "url" => $url,
+                "method" => $method,
+                "status_code" => $response->getStatusCode(),
+            ],
+        ]);
+        $this->end();
+
+        return [
+            "code" => $response->getStatusCode(),
+            "body" => $response->getBody()->getContents(),
+        ];
     }
 
     /**

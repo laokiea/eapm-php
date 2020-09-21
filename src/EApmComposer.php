@@ -17,6 +17,7 @@ use EApmPhp\Base\EApmContainer;
 use EApmPhp\Base\EApmEventBase;
 use EApmPhp\Component\EApmLogger;
 use EApmPhp\Events\EApmError;
+use EApmPhp\Events\EApmSpan;
 use EApmPhp\Trace\EApmDistributeTrace;
 use EApmPhp\Events\EApmTransaction;
 use EApmPhp\Util\ElasticApmConfigUtil;
@@ -380,6 +381,34 @@ class EApmComposer
     }
 
     /**
+     * Start a new apm span
+     *
+     * @param string $name
+     * @param string $type
+     * @param string $subType
+     * @param EApmEventBase $parentEvent
+     *
+     * @return EApmSpan
+     */
+    public function startNewSpan(string $name, string $type, string $subType, EApmEventBase $parentEvent) : EApmSpan
+    {
+        return new EApmSpan($name, $type, $subType, $parentEvent);
+    }
+
+    /**
+     * Capture a new Throwable error|exception
+     *
+     * @param \Throwable $error
+     * @param EApmEventBase $parentEvent
+     *
+     * @return void
+     */
+    public function captureError(\Throwable $error, EApmEventBase $parentEvent) : void
+    {
+        $this->addEvent(new EApmError($error, $parentEvent));
+    }
+
+    /**
      * Gets the ID of the transaction. Events ID is a hex encoded 64 random bits (== 8 bytes == 16 hex digits) ID.
      *
      * @return string
@@ -457,19 +486,6 @@ class EApmComposer
     }
 
     /**
-     * Capture a new Throwable error|exception
-     *
-     * @param \Throwable $error
-     * @param EApmEventBase $parentEvent
-     *
-     * @return void
-     */
-    public function captureError(\Throwable $error, EApmEventBase $parentEvent) : void
-    {
-        $this->addEvent(new EApmError($error, $parentEvent));
-    }
-
-    /**
      * Get the specific APM configuration.
      *
      * @param string $configName
@@ -523,6 +539,16 @@ class EApmComposer
     public function pingApmServer() : \Psr\Http\Message\ResponseInterface
     {
         return $this->getEventIntake()->pingApmServer();
+    }
+
+    /**
+     * Get next request trace headers
+     *
+     * @return array
+     */
+    public function getNextRequestTraceHeaders() : array
+    {
+        return $this->getDistributeTrace()->getNextRequestTraceHeaders();
     }
 
     /**

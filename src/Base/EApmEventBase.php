@@ -415,6 +415,10 @@ class EApmEventBase
             return null;
         }
 
+        if (!isset($_SERVER["HTTPS"])) {
+            $_SERVER["HTTPS"] = false;
+        }
+
         $rEqUeStCoNtExT = array();
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $rEqUeStCoNtExT["body"] = empty($_POST)
