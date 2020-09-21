@@ -29,6 +29,11 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     public const EVENT_TYPE = "span";
 
     /**
+     * @const
+     */
+    public const DEFAULT_ERROR_HTTP_CODE = 400;
+
+    /**
      * @var
      */
     protected $action = null;
@@ -102,6 +107,13 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startHttpTypeSpan(string $method, string $url, array $options = [])
     {
+        $context = [
+            "http" => [
+                "url" => $url,
+                "method" => $method,
+            ],
+        ];
+
         if (!preg_match("/^https?:\/\/.*$/", $url)) {
             $url = "http://" . $url;
         }
@@ -122,17 +134,15 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
             );
         } catch (RequestException $exception) {
             $this->getComposer()->captureError($exception, $this);
+            $context["status_code"] = self::DEFAULT_ERROR_HTTP_CODE;
+            $this->setContext($context);
+            $this->end();
             return false;
         }
 
         $this->end();
-        $this->setContext([
-            "http" => [
-                "url" => $url,
-                "method" => $method,
-                "status_code" => $response->getStatusCode(),
-            ],
-        ]);
+        $context["status_code"] = $response->getStatusCode();
+        $this->setContext($context);
 
         return [
             "code" => $response->getStatusCode(),
@@ -151,14 +161,6 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startRedisTypeSpan(\Redis $redis, string $command, ...$args)
     {
-        try {
-            $result = call_user_func_array([$redis, $command], $args);
-        } catch (\RedisException $exception) {
-            $this->getComposer()->captureError($exception, $this);
-            return false;
-        }
-
-        $this->end();
         $this->setContext([
             "db" => [
                 "instance"  => $this->getSubtype(),
@@ -166,6 +168,16 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "type"      => "command",
             ],
         ]);
+
+        try {
+            $result = call_user_func_array([$redis, $command], $args);
+        } catch (\Exception $exception) {
+            $this->getComposer()->captureError($exception, $this);
+            $this->end();
+            return false;
+        }
+
+        $this->end();
 
         return $result;
     }
@@ -180,6 +192,14 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startMysqlTypeSpan($mysql, string $sql)
     {
+        $this->setContext([
+            "db" => [
+                "instance" => $this->getSubtype(),
+                "statement" => $sql,
+                "type" => "sql",
+            ]
+        ]);
+
         $queryType = "";
         preg_match("/^(.*?)\s/", $sql, $match);
         $queryType = $match[1];
@@ -214,21 +234,16 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                     break;
                 default:
                     $this->getComposer()->captureError(new \Error("Unsupported db extension"), $this);
+                    $this->end();
                     return false;
             }
         } catch (\Exception $exception) {
             $this->getComposer()->captureError($exception, $this);
+            $this->end();
             return false;
         }
 
         $this->end();
-        $this->setContext([
-            "db" => [
-                "instance" => $this->getSubtype(),
-                "statement" => $sql,
-                "type" => "sql",
-            ]
-        ]);
 
         return $result;
     }
