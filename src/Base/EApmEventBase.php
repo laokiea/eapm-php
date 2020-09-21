@@ -429,7 +429,7 @@ class EApmEventBase
         $rEqUeStCoNtExT["headers"] = EApmRequestUtil::getAllHttpHeaders();
         $rEqUeStCoNtExT["http_version"] = $_SERVER["SERVER_PROTOCOL"] ?? "";
         $rEqUeStCoNtExT["method"] = $_SERVER["REQUEST_METHOD"];
-        $rEqUeStCoNtExT["cookies"] = $_COOKIE ?? [];
+        $rEqUeStCoNtExT["cookies"] = !empty($_COOKIE) ? $_COOKIE : null;
         $rEqUeStCoNtExT["socket"] = array(
             "encrypted" => $_SERVER["HTTPS"] ?? false,
             "remote_address" => EApmRequestUtil::getRemoteAddr(),

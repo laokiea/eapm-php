@@ -106,10 +106,8 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
         }
 
         $aPmReQuEsTHeAdErS = $this->getComposer()->getNextRequestTraceHeaders();
-        if (isset($options["headers"])) {
-            $options["headers"] = array_merge($options["headers"],
-                $aPmReQuEsTHeAdErS);
-        }
+        $options["headers"] = array_merge($options["headers"] ?? [],
+            $aPmReQuEsTHeAdErS);
 
         if (!isset($options["verify"])) {
             $options["verify"] = false;
@@ -120,6 +118,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
             $url,
             $options
         );
+        $this->end();
 
         $this->setContext([
             "http" => [
@@ -128,12 +127,98 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "status_code" => $response->getStatusCode(),
             ],
         ]);
-        $this->end();
 
         return [
             "code" => $response->getStatusCode(),
             "body" => $response->getBody()->getContents(),
         ];
+    }
+
+    /**
+     * Start a redis type span
+     *
+     * @param \Redis $redis
+     * @param string $command
+     * @param mixed ...$args
+     *
+     * @return mixed
+     */
+    public function startRedisTypeSpan(\Redis $redis, string $command, ...$args)
+    {
+        $this->setContext([
+            "db" => [
+                "instance"  => $this->getSubtype(),
+                "statement" => $command,
+                "type"      => "command",
+            ],
+        ]);
+        $result = call_user_func_array([$redis, $command], $args);
+        $this->end();
+
+        return $result;
+    }
+
+    /**
+     * Start mysql type span
+     *
+     * @param $mysql
+     * @param string $sql
+     *
+     * @return bool|null
+     */
+    public function startMysqlTypeSpan($mysql, string $sql)
+    {
+        $queryType = "";
+        preg_match("/^(.*?)\s/", $sql, $match);
+        $queryType = $match[1];
+
+        $result = null;
+        try {
+            switch (get_class($mysql)) {
+                case "mysqli":
+                case "mysql":
+                    $result = $mysql->query($sql);
+                    if (!$result) {
+                        return false;
+                    }
+                    if (strtolower($queryType) == "select") {
+                        $result = $result->fetch_assoc();
+                    }
+                    break;
+                case "PDO":
+                    switch(strtolower($queryType)) {
+                        case "select":
+                            $result = $mysql->query($sql);
+                            if (!$result) {
+                                return false;
+                            }
+                            $result = $result->fetchAll(\PDO::FETCH_ASSOC);
+                            break;
+                        case "update":
+                        case "delete":
+                            $result = $mysql->exec($sql);
+                            break;
+                    }
+                    break;
+                default:
+                    $this->getComposer()->captureError(new \Error("Unsupported db extension"), $this);
+                    return false;
+            }
+        } catch (\Exception $exception) {
+            $this->getComposer()->captureError($exception, $this);
+            return false;
+        }
+
+        $this->end();
+        $this->setContext([
+            "db" => [
+                "instance" => $this->getSubtype(),
+                "statement" => $sql,
+                "type" => "sql",
+            ]
+        ]);
+
+        return $result;
     }
 
     /**
