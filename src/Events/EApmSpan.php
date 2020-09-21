@@ -164,7 +164,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
         $this->setContext([
             "db" => [
                 "instance"  => $this->getSubtype(),
-                "statement" => $command,
+                "statement" => $command . " " . implode(" ", $args),
                 "type"      => "command",
             ],
         ]);
