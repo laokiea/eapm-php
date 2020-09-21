@@ -137,6 +137,18 @@ class EApmConfigure
     }
 
     /**
+     * Set sample rate
+     * @param float $sampleRate
+     */
+    public function setSampleRate(float $sampleRate) : void
+    {
+        if ($sampleRate < 0 || $sampleRate > 1) {
+            return;
+        }
+        $this->setAppConfig("sample_rate", $sampleRate);
+    }
+
+    /**
      * Get configuration
      *
      * @param string $configName

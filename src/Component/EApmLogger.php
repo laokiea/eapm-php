@@ -64,6 +64,7 @@ final class EApmLogger
         if (is_null($loggerFile)) {
             $loggerFile = self::DEFAULT_LOGGER_PATH . "eapm-php." . "$level." . date("Ymd") . ".log";
         }
+        $msg = "[" . date("Y-m-d H:i:s") . "]" . $msg;
         file_put_contents($loggerFile, $msg.PHP_EOL, FILE_APPEND);
     }
 

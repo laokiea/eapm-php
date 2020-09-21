@@ -283,6 +283,18 @@ class EApmComposer
     }
 
     /**
+     * Set sample rate
+     *
+     * @param float $sampleRate
+     *
+     * @return void
+     */
+    public function setSampleRate(float $sampleRate) : void
+    {
+        $this->getConfigure()->setSampleRate($sampleRate);
+    }
+
+    /**
      * Get current transaction object
      */
     public function getCurrentTransaction()
@@ -405,6 +417,9 @@ class EApmComposer
      */
     public function captureError(\Throwable $error, EApmEventBase $parentEvent) : void
     {
+        if ($this->getConfigure()->getAppConfig("debug")) {
+            $this->getLogger()->logError($error->getMessage());
+        }
         $this->addEvent(new EApmError($error, $parentEvent));
     }
 
