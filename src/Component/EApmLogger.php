@@ -51,21 +51,29 @@ final class EApmLogger
 
     /**
      * Logger
+     *
      * @param string $level
      * @param string $msg
+     *
      * @return void
      */
     public function appLogger(string $level, string $msg) : void
     {
-        if (!file_exists(self::DEFAULT_LOGGER_PATH)) {
-            mkdir(self::DEFAULT_LOGGER_PATH, 0777, true);
+        try {
+            if (!file_exists(self::DEFAULT_LOGGER_PATH)) {
+                mkdir(self::DEFAULT_LOGGER_PATH, 0777, true);
+            }
+            $loggerFile = $this->getComposer()->getConfigure()->getAppConfig("loggerFile");
+            if (is_null($loggerFile)) {
+                $loggerFile = self::DEFAULT_LOGGER_PATH . "eapm-php." . "$level." . date("Ymd") . ".log";
+            }
+            $msg = "[" . date("Y-m-d H:i:s") . "]" . $msg;
+            file_put_contents($loggerFile, $msg.PHP_EOL, FILE_APPEND);
+        } catch (\Exception $exception) {
+            $this->getComposer()->captureError($exception,
+                $this->getComposer()->getCurrentTransaction()
+            );
         }
-        $loggerFile = $this->getComposer()->getConfigure()->getAppConfig("loggerFile");
-        if (is_null($loggerFile)) {
-            $loggerFile = self::DEFAULT_LOGGER_PATH . "eapm-php." . "$level." . date("Ymd") . ".log";
-        }
-        $msg = "[" . date("Y-m-d H:i:s") . "]" . $msg;
-        file_put_contents($loggerFile, $msg.PHP_EOL, FILE_APPEND);
     }
 
     /**

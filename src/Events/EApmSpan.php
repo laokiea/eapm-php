@@ -107,6 +107,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startHttpTypeSpan(string $method, string $url, array $options = [])
     {
+        $this->setAction($method);
         $context = [
             "http" => [
                 "url" => $url,
@@ -161,6 +162,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startRedisTypeSpan(\Redis $redis, string $command, ...$args)
     {
+        $this->setAction($command);
         $this->setContext([
             "db" => [
                 "instance"  => $this->getSubtype(),
@@ -203,6 +205,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
         $queryType = "";
         preg_match("/^(.*?)\s/", $sql, $match);
         $queryType = $match[1];
+        $this->setAction(strtoupper($queryType));
 
         $result = null;
         try {
