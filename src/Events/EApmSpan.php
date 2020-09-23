@@ -44,6 +44,11 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     protected $subtype = "";
 
     /**
+     * @var bool
+     */
+    protected $isSync = true;
+
+    /**
      * Set action of the span
      * @param string $action
      */
@@ -80,6 +85,26 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     }
 
     /**
+     * Is span a sync type operation
+     *
+     * @return bool
+     */
+    public function getSpanIsSync() : bool
+    {
+        return $this->isSync;
+    }
+
+    /**
+     * Set span operation type
+     *
+     * @param bool $isSync
+     */
+    public function setSpanIsSync(bool $isSync) : void
+    {
+        $this->isSync = $isSync;
+    }
+
+    /**
      * EApmSpan constructor.
      * @param string $name
      * @param string $type
@@ -107,6 +132,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startHttpTypeSpan(string $method, string $url, array $options = [])
     {
+        $this->setSpanIsSync(true);
         $this->setAction($method);
         $context = [
             "http" => [
@@ -162,6 +188,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startRedisTypeSpan(\Redis $redis, string $command, ...$args)
     {
+        $this->setSpanIsSync(true);
         $this->setAction($command);
         $this->setContext([
             "db" => [
@@ -194,13 +221,13 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function startMysqlTypeSpan($mysql, string $sql)
     {
-        $this->setContext([
-            "db" => [
-                "instance" => $this->getSubtype(),
-                "statement" => $sql,
-                "type" => "sql",
-            ]
-        ]);
+        $dbContext = [
+            "instance" => $this->getSubtype(),
+            "statement" => $sql,
+            "type" => "sql",
+            "affected_rows" => 0,
+        ];
+        $this->setSpanIsSync(true);
 
         $queryType = "";
         preg_match("/^(.*?)\s/", $sql, $match);
@@ -219,6 +246,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                     if (strtolower($queryType) == "select") {
                         $result = $result->fetch_assoc();
                     }
+                    $dbContext["rows_affected"] = $mysql->affected_rows ?? 0;
                     break;
                 case "PDO":
                     switch(strtolower($queryType)) {
@@ -228,24 +256,29 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                                 return false;
                             }
                             $result = $result->fetchAll(\PDO::FETCH_ASSOC);
+                            $dbContext["affected_rows"] = count($result);
                             break;
                         case "update":
                         case "delete":
                             $result = $mysql->exec($sql);
+                            $dbContext["affected_rows"] = (int)$result;
                             break;
                     }
                     break;
                 default:
                     $this->getComposer()->captureError(new \Error("Unsupported db extension"), $this);
+                    $this->setContext($dbContext);
                     $this->end();
                     return false;
             }
         } catch (\Exception $exception) {
             $this->getComposer()->captureError($exception, $this);
+            $this->setContext($dbContext);
             $this->end();
             return false;
         }
 
+        $this->setContext($dbContext);
         $this->end();
 
         return $result;
@@ -274,7 +307,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                 "name" => $this->getName(),
                 "duration" => $this->getDuration(),
                 "stacktrace" => null,
-                "sync" => true,
+                "sync" => $this->getSpanIsSync(),
                 "sample_rate" => $this->getComposer()->getConfigure()->getAppConfig("sample_rate"),
             ],
         );
