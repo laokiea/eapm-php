@@ -225,7 +225,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
             "instance" => $this->getSubtype(),
             "statement" => $sql,
             "type" => "sql",
-            "affected_rows" => 0,
+            "rows_affected" => 0,
         ];
         $this->setSpanIsSync(true);
 
@@ -256,12 +256,12 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
                                 return false;
                             }
                             $result = $result->fetchAll(\PDO::FETCH_ASSOC);
-                            $dbContext["affected_rows"] = count($result);
+                            $dbContext["rows_affected"] = count($result);
                             break;
                         case "update":
                         case "delete":
                             $result = $mysql->exec($sql);
-                            $dbContext["affected_rows"] = (int)$result;
+                            $dbContext["rows_affected"] = (int)$result;
                             break;
                     }
                     break;
