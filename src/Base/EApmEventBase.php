@@ -52,10 +52,11 @@ class EApmEventBase
      * @var
      */
     protected $context = array(
-        "user" => array(),
-        "http" => array(),
-        "db"   => array(),
-        "tags" => array(),
+        "user"    => [],
+        "http"    => [],
+        "db"      => [],
+        "tags"    => [],
+        "message" => [],
     );
 
     /**

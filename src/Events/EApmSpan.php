@@ -285,6 +285,25 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     }
 
     /**
+     * Set message queue publish/consume context
+     *
+     * @param string $messageBody
+     */
+    public function setMessageQueueSpanContext(string $messageBody) : void
+    {
+        $this->setAction($this->getName());
+        $this->setContext([
+            "message" => [
+                "queue" => [
+                    "name" => $this->getSubtype(),
+                ],
+                "body" => $messageBody,
+            ],
+        ]);
+        $this->end();
+    }
+
+    /**
      * Json serialize span event object
      * @link https://www.elastic.co/guide/en/apm/server/master/span-api.html
      * @return array
