@@ -546,6 +546,7 @@ class EApmEventBase
         do {
             $spanId = EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::SPANID_LENGTH / 2);
         } while(in_array($spanId, array_keys(self::$registeredEvents)));
+        
         return $spanId;
     }
 
