@@ -24,8 +24,8 @@ $agent = new EApmPhp\EApmComposer();
 ###### 代码
 ```php
 $configure = new \EApmPhp\EApmConfigure(
-    "http://apm-http.svc.bks-dev.ourbluecity.com",
-    "vzvz59U98zd80wYTX063Zg0j",
+    "apmserverurlhere",
+    "tokenhere",
     "Frontend"
 );
 $agent = new EApmPhp\EApmComposer();
@@ -184,8 +184,8 @@ $response = $httpSpan->startHttpTypeSpan("GET", "http://localhost:8812/test_dist
 #### 假设User-Profile微服务里有代码如下：
 ```php
 $configure = new \EApmPhp\EApmConfigure(
-    "http://apm-http.svc.bks-dev.ourbluecity.com",
-    "vzvz59U98zd80wYTX063Zg0j",
+    "apmserverurlhere",
+    "tokenhere",
     "eapm-php-user-profile"
 );
 
@@ -233,8 +233,8 @@ $agent->getLogger()->logError("log error info");
 require_once "./vendor/autoload.php";
 
 $configure = new \EApmPhp\EApmConfigure(
-    "http://apm-http.svc.bks-dev.ourbluecity.com",
-    "vzvz59U98zd80wYTX063Zg0j",
+    "apmserverurlhere",
+    "tokenhere",
     "eapm-php-project"
 );
 
