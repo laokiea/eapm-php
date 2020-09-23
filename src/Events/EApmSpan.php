@@ -291,7 +291,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function setMessageQueueSpanContext(string $messageBody) : void
     {
-        $this->setAction($this->getName());
+        $this->setAction(strtolower($this->getName()));
         $this->setContext([
             "message" => [
                 "queue" => [
