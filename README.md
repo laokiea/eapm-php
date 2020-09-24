@@ -36,6 +36,7 @@ $agent->setConfigure($configure);
 ##### 设置debug模式
 ```php
 //设置debug模式，一些错误会直接输出或者记录到日志中
+//可以查看日志小节
 $agent->setAppConfig("debug", true);
 ```
 ##### 设置用户uid
@@ -66,10 +67,14 @@ $agent->EApmUse($invoke_func);
 ##### 启动一个Transaction(会话)
 >Transaction(会话)代表着一系列Http/DB/Grpc等操作的集合
 ```php
-$transaction = $agent->startNewTransaction("test", "test.type");
+$transaction = $agent->startNewTransaction("POST /avatar/{uid}/upload", "request");
 ```
 >startNewTransaction方法接受name和type参数，这两个参数标示着一次会话的特征，比如在一次HTTP请求中，逻辑是处理用户上传头像，那么name和type可以是
->**name**: `POST /user/avatar/upload`(也可以直接用中文:`用户上传头像`，好处是在面板上可以一目了然)
+
+>**name**: `POST /avatar/{uid}/upload`(也可以直接用中文:`用户上传头像`，好处是在面板上可以一目了然)
+
+>⚠️如果请求地址中有ID，token等不同值的参数，比如uid，那么用{uid}代替，其他类型的参数也一样，这样在APM面板上不会产生很多的会话名称。
+
 >**type**: `http.request`
 
 ##### 结束一个会话
@@ -221,7 +226,7 @@ $agent->setAppConfig("debug", true);
 $agent->setUserId(1001);
 $agent->EApmUse();
 
-$transaction = $agent->startNewTransaction("GET /user/1920221/info", "request");
+$transaction = $agent->startNewTransaction("GET /user/{uid}/info", "request");
 $mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
 ```
@@ -276,7 +281,7 @@ $agent->EApmUse(functoion(){
     echo "trace start.";
 });
 
-$transaction = $agent->startNewTransaction("POST /user/1000/avatar/upload", "http.request");
+$transaction = $agent->startNewTransaction("POST /user/{uid}/avatar/upload", "http.request");
 
 // mysql span
 $mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
