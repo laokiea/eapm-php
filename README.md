@@ -36,9 +36,10 @@ $agent->setConfigure($configure);
 ##### 设置debug模式
 ```php
 //设置debug模式，一些错误会直接输出或者记录到日志中
-//可以查看[日志](#日志)小节
 $agent->setAppConfig("debug", true);
 ```
+可以查看[日志](#日志)小节
+
 ##### 设置用户uid
 ```php
 // 设置用户id可以在APM面板上直接粘贴搜索
