@@ -36,7 +36,7 @@ $agent->setConfigure($configure);
 ##### 设置debug模式
 ```php
 //设置debug模式，一些错误会直接输出或者记录到日志中
-//可以查看日志小节
+//可以查看[日志](#日志)小节
 $agent->setAppConfig("debug", true);
 ```
 ##### 设置用户uid
@@ -146,7 +146,7 @@ var_dump($result);
 > 见分布式追踪章节
 
 #### 消息队列操作
-> 还有一种常见的消息在网络间传播的操作就是消息队列的生产和消费
+> 还有一种常见的数据息在网络间传播的操作就是消息队列的生产和消费
 ##### 代码
 ```php
 $publishSpan = $agent->startNewSpan("Publish", "kafka.nezha", "topic-publish", $transaction);
