@@ -173,10 +173,10 @@ $consumeSpan->setMessageQueueSpanContext("consume data body");
 >setMessageQueueSpanContext方法**接受生产或者消费到的消息体作为参数**(如果生产或者消费多条消息，**可以传空字符串或者最后一条消息的内容**)
 
 ## 分布式追踪
-> 一个完整的HTTP请求，可能会经过多个服务。
+> 一个完整的HTTP请求，可能会经过多个微服务或者其他第三方服务。
 > 例如在Frontend里调用user-profile,广告，用户关系等微服务，那么可以在以上的微服务中也接入eapm-php,达到分布式追踪的效果。
 > **agent会自动处理分布式追踪中的trace信息**。
-> 当然如果微服务里没有接入agent，也没关系，agent也会记录该次请求。
+> 当然如果微服务里没有接入agent或者访问是第三方api，也没关系，agent也会记录该次请求。
 
 >**还是以代码为示例：**
 
