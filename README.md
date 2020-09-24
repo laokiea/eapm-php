@@ -140,6 +140,32 @@ var_dump($result);
 #### HTTP Span
 > 见分布式追踪章节
 
+#### 消息队列操作
+> 还有一种常见的消息在网络间传播的操作就是消息队列的生产和消费
+##### 代码
+```php
+$publishSpan = $agent->startNewSpan("Publish", "kafka.nezha", "topic-publish", $transaction);
+// 这里是你的生产代码
+// xxxx
+$publishSpan->setMessageQueueSpanContext("publish data body");
+
+$consumeSpan = $agent->startNewSpan("Consume", "rabbitMQ", "topic-consume", $transaction);
+// 这里是你的消费代码
+// xxxx
+$consumeSpan->setMessageQueueSpanContext("consume data body");
+
+// 如果是消费，这里是你的处理消息的代码
+// xxxx
+```
+>如上，先创建一个任意类型的Span，和db及http Span不同的是，agent没有封装生产消费的逻辑，但是消息队列操作的Span可以调用setMessageQueueSpanContext方法设置context
+
+> ⚠️**对于消息队列的操作，上面参数的值有以下建议:**
+> 1. **name**传入`Publish/Consume`表示生产还是消费
+> 2. **type**以点分隔符，记录操作的消息队列种类, 可以带上额外的实例名，例如`kafka.nezha`, `rabbitMQ`
+> 3. **sub_type**表示消费的queue/Topic等，例如`pns-sender-topic`
+
+>setMessageQueueSpanContext方法**接受生产或者消费到的消息体作为参数**(如果生产或者消费多条消息，**可以传空字符串或者最后一条消息的内容**)
+
 ## 分布式追踪
 > 一个完整的HTTP请求，可能会经过多个服务。
 > 例如在Frontend里调用user-profile,广告，用户关系等微服务，那么可以在以上的微服务中也接入eapm-php,达到分布式追踪的效果。
