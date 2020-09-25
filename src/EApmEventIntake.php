@@ -16,6 +16,8 @@ namespace EApmPhp;
 use EApmPhp\Base\EApmEventBase;
 use EApmPhp\Events\EApmMetadata;
 use RuntimeException;
+use GuzzleHttp\Handler\CurlMultiHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Exception\RequestException;
@@ -161,7 +163,13 @@ class EApmEventIntake
      */
     public function getEventClient() : Client
     {
-        $client = $this->client ?? ($this->client = new Client(["timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT]));
+        $newHandlerBase = new CurlMultiHandler();
+        $newRequestHandler = HandlerStack::create($newHandlerBase);
+
+        $client = $this->client ?? ($this->client = new Client([
+            "timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT,
+            "handler" => $newRequestHandler,
+        ]));
         return $client;
     }
 
@@ -233,11 +241,12 @@ class EApmEventIntake
         }
 
         try {
+            // do nothing and drop response
             $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
             ])->then();
-            // do nothing and drop response
+            $this->getEventClient()->getConfig("handler")->tick();
         } catch (RequestException $exception) {
             if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
                 $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
