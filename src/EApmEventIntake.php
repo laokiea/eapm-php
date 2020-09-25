@@ -233,26 +233,30 @@ class EApmEventIntake
         }
 
         try {
-            $response = $this->getEventClient()->post($this->getEventPushServerUrl(), [
+            $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
-            ]);
+            ])->then();
+            // do nothing and drop response
         } catch (RequestException $exception) {
-            $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
             if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
-               echo \GuzzleHttp\Psr7\str($exception->getResponse());
+                $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
+                echo \GuzzleHttp\Psr7\str($exception->getResponse());
             }
             return false;
         } finally {
             $this->eventsReset();
         }
 
+        /*
         if ($response->getStatusCode() == self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
             return true;
         } else {
             $this->getComposer()->getLogger()->logWarn("Request Apm Failed: ".$response->getBody()->getContents());
             return false;
         }
+        */
+        return true;
     }
 
     /**
