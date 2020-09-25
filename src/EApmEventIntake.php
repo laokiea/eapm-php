@@ -251,11 +251,15 @@ class EApmEventIntake
 
         try {
             // do nothing and drop response
-            $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
+            $promise = $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
             ])->then();
-            $this->asyncHandlerBase->tick();
+
+            // event loop
+            while ($promise->getState() === "pending") {
+                $this->asyncHandlerBase->tick();
+            }
         } catch (RequestException $exception) {
             if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
                 $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
