@@ -257,8 +257,10 @@ class EApmEventIntake
             ])->then();
 
             // event loop
-            while ($promise->getState() === "pending") {
+            $pendingLoopTimes = 0;
+            while ($promise->getState() === "pending" && $pendingLoopTimes < 20) {
                 $this->asyncHandlerBase->tick();
+                ++$pendingLoopTimes;
             }
         } catch (RequestException $exception) {
             if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {

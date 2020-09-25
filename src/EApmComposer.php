@@ -541,15 +541,7 @@ class EApmComposer
         }
 
         if (!$this->eventPushed) {
-            if (extension_loaded("pcntl")) {
-                $pid = @pcntl_fork();
-                if ($pid == 0) {
-                    $this->getEventIntake()->eventPush();
-                    exit();
-                }
-            } else {
-                $this->getEventIntake()->eventPush();
-            }
+            $this->getEventIntake()->eventPush();
             $this->eventPushed = true;
         }
     }
