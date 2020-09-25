@@ -48,6 +48,7 @@ class EApmConfigure
         "environment" => "dev",
         "service_version" => "v0.0.1",
         "uid" => null,
+        "max_pending_loop_times" => 5000,
     );
 
     /**

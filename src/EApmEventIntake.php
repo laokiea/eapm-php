@@ -258,7 +258,7 @@ class EApmEventIntake
 
             // event loop
             $pendingLoopTimes = 0;
-            while ($promise->getState() === "pending" && $pendingLoopTimes < 20) {
+            while ($promise->getState() === "pending" && $pendingLoopTimes < $this->getComposer()->getConfigure()->getAppConfig("max_pending_loop_times")) {
                 $this->asyncHandlerBase->tick();
                 ++$pendingLoopTimes;
             }
