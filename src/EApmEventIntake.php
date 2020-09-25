@@ -169,15 +169,17 @@ class EApmEventIntake
      */
     public function getEventClient() : Client
     {
-        $asyncHandlerBase = new CurlMultiHandler();
-        $newRequestHandler = HandlerStack::create($asyncHandlerBase);
+        if (is_null($this->client)) {
+            $this->asyncHandlerBase = new CurlMultiHandler();
+            $newRequestHandler = HandlerStack::create($this->asyncHandlerBase);
 
-        $this->asyncHandlerBase = $asyncHandlerBase;
-        $client = $this->client ?? ($this->client = new Client([
-            "timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT,
-            "handler" => $newRequestHandler,
-        ]));
-        return $client;
+            $this->client = new Client([
+                "timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT,
+                "handler" => $newRequestHandler,
+            ]);
+        }
+
+        return $this->client;
     }
 
     /**
