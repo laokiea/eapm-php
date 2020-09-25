@@ -63,6 +63,12 @@ class EApmEventIntake
     private $client = null;
 
     /**
+     * Guzzle async handler basement
+     * @var
+     */
+    private $asyncHandlerBase = null;
+
+    /**
      * Events
      * @var array
      */
@@ -163,9 +169,10 @@ class EApmEventIntake
      */
     public function getEventClient() : Client
     {
-        $newHandlerBase = new CurlMultiHandler();
-        $newRequestHandler = HandlerStack::create($newHandlerBase);
+        $asyncHandlerBase = new CurlMultiHandler();
+        $newRequestHandler = HandlerStack::create($asyncHandlerBase);
 
+        $this->asyncHandlerBase = $asyncHandlerBase;
         $client = $this->client ?? ($this->client = new Client([
             "timeout" => self::EVENT_PUSH_REQUEST_TIMEOUT,
             "handler" => $newRequestHandler,
@@ -246,7 +253,7 @@ class EApmEventIntake
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
             ])->then();
-            $this->getEventClient()->getConfig("handler")->tick();
+            $this->asyncHandlerBase->tick();
         } catch (RequestException $exception) {
             if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
                 $this->getComposer()->getLogger()->logError("Request Apm Failed: ".$exception->getMessage());
