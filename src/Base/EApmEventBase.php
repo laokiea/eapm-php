@@ -426,7 +426,7 @@ class EApmEventBase
                 ? json_encode($_POST)
                 : file_get_contents("php://input");
         }
-        $rEqUeStCoNtExT["env"] = $_SERVER;
+        $rEqUeStCoNtExT["env"] = $this->getRequestEnvContext();
         $rEqUeStCoNtExT["headers"] = EApmRequestUtil::getAllHttpHeaders();
         $rEqUeStCoNtExT["http_version"] = $_SERVER["SERVER_PROTOCOL"] ?? "";
         $rEqUeStCoNtExT["method"] = $_SERVER["REQUEST_METHOD"];
@@ -448,6 +448,22 @@ class EApmEventBase
         array_walk($rEqUeStCoNtExT["url"], [$this, "checkContextFieldLength"]);
 
         return $rEqUeStCoNtExT;
+    }
+
+    /**
+     * Request env context
+     *
+     * @link https://github.com/elastic/apm-server/blob/5e05c3ba719f6f636738a12ee4fada6b9f9a22ef/docs/spec/request.json#L11
+     * @return array|null
+     */
+    public function getRequestEnvContext() : ?array
+    {
+        $envList = $this->getComposer()->getConfigure()->getAppConfig("env_list");
+        if (empty($envList)) {
+            return null;
+        }
+
+        return array_intersect_key($_SERVER, array_flip($envList));
     }
 
     /**

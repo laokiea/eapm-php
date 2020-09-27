@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace EApmPhp;
 
 use EApmPhp\Util\EApmRequestUtil;
+use EApmPhp\Util\ElasticApmConfigUtil;
+use RuntimeException;
 
 /**
  * Class EApmConfigure
@@ -49,6 +51,7 @@ class EApmConfigure
         "service_version" => "v0.0.1",
         "uid" => null,
         "max_pending_loop_times" => 5000,
+        "env_list" => ["HTTP_HOST", "HTTP_CONNECTION", "HTTP_CACHE_CONTROL", "HTTP_USER_AGENT", "REMOTE_ADDR", "REMOTE_PORT"],
     );
 
     /**
@@ -56,9 +59,12 @@ class EApmConfigure
      */
     public function __construct(?string $serverUrl, ?string $secretToken, ?string $serviceName)
     {
-        $this->setServerUrl($serverUrl ?? null);
-        $this->setSecretToken($secretToken ?? null);
-        $this->setServiceName($serviceName ?? null);
+        $this->setServerUrl($serverUrl
+            ?? ElasticApmConfigUtil::getElasticApmConfig("server_url"));
+        $this->setSecretToken($secretToken
+            ?? ElasticApmConfigUtil::getElasticApmConfig("secret_token"));
+        $this->setServiceName($serviceName
+            ?? ElasticApmConfigUtil::getElasticApmConfig("service_name"));
     }
 
     /**
@@ -116,6 +122,9 @@ class EApmConfigure
      */
     public function setServerUrl(?string $serverUrl): void
     {
+        if (is_null($serverUrl)) {
+            throw new RuntimeException("Server url can not be null.");
+        }
         $this->serverUrl = $serverUrl;
     }
 

@@ -164,7 +164,7 @@ class EApmComposer
     /**
      * @return EApmEventIntake
      */
-    public function getEventIntake() : EApmEventIntake
+    public function getEventIntake() : ?EApmEventIntake
     {
         return $this->eventIntake;
     }
@@ -180,7 +180,7 @@ class EApmComposer
     /**
      * @return EApmLogger
      */
-    public function getLogger() : EApmLogger
+    public function getLogger() : ?EApmLogger
     {
         return $this->logger;
     }
@@ -216,7 +216,7 @@ class EApmComposer
      *
      * @return \EApmPhp\EApmMiddleware
      */
-    public function getMiddleware() : EApmMiddleware
+    public function getMiddleware() : ?EApmMiddleware
     {
         return $this->middleware;
     }
@@ -245,7 +245,7 @@ class EApmComposer
      *
      * @return \EApmPhp\EApmConfigure
      */
-    public function getConfigure() : EApmConfigure
+    public function getConfigure() : ?EApmConfigure
     {
         return $this->configure;
     }
@@ -265,7 +265,7 @@ class EApmComposer
      *
      * @return \EApmPhp\Trace\EApmDistributeTrace
      */
-    public function getDistributeTrace() : EApmDistributeTrace
+    public function getDistributeTrace() : ?EApmDistributeTrace
     {
         return $this->distributeTrace;
     }
