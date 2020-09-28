@@ -18,6 +18,7 @@ $agent = new EApmPhp\EApmComposer();
 > SECRET_TOKEN：提交请求所需要的**token**
 > 
 > SERVICE_NAME: 使用APM的服务名称，例如**Frontend**
+
 > 上述配置在使用中，可以配置到系统的环境变量里，格式：ELASTIC_APM_xxx,例如：ELASTIC_APM_SERVER_URL
 
 **其他相关配置查看** [APM接入文档](https://bluecity.feishu.cn/docs/doccnDTjBZaEirrtTHhYU1Czarc)
