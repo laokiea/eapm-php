@@ -30,7 +30,13 @@ $configure = new \EApmPhp\EApmConfigure(
     "tokenhere",
     "Frontend"
 );
-$agent = new EApmPhp\EApmComposer();
+$agent = \EApmPhp\EApmComposer::getAgent();
+$agent->setConfigure($configure);
+```
+> 如果apm的配置写到了环境变量中，那么上面的代码可以改成如下：
+```php
+$configure = new \EApmPhp\EApmConfigure();
+$agent = \EApmPhp\EApmComposer::getAgent();
 $agent->setConfigure($configure);
 ```
 
