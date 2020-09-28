@@ -26,9 +26,9 @@ $agent = new EApmPhp\EApmComposer();
 ###### 代码
 ```php
 $configure = new \EApmPhp\EApmConfigure(
-    "apmserverurlhere",
-    "tokenhere",
-    "Frontend"
+    "your_apm_server_url_here",
+    "your_apm_secret_token_here",
+    "your_apm_service_name_here"
 );
 $agent = \EApmPhp\EApmComposer::getAgent();
 $agent->setConfigure($configure);
@@ -227,8 +227,8 @@ $response = $httpSpan->startHttpTypeSpan("GET", "http://localhost:8812/test_dist
 #### 假设User-Profile微服务里有代码如下：
 ```php
 $configure = new \EApmPhp\EApmConfigure(
-    "apmserverurlhere",
-    "tokenhere",
+    "your_apm_server_url_here",
+    "your_apm_secret_token_here",
     "eapm-php-user-profile"
 );
 
@@ -276,8 +276,8 @@ $agent->getLogger()->logError("log error info");
 require_once "./vendor/autoload.php";
 
 $configure = new \EApmPhp\EApmConfigure(
-    "apmserverurlhere",
-    "tokenhere",
+    "your_apm_server_url_here",
+    "your_apm_secret_token_here",
     "eapm-php-project"
 );
 
