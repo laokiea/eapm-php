@@ -57,7 +57,7 @@ class EApmConfigure
     /**
      * EApmConfigure constructor.
      */
-    public function __construct(?string $serverUrl, ?string $secretToken, ?string $serviceName)
+    public function __construct(?string $serverUrl = null, ?string $secretToken = null, ?string $serviceName = null)
     {
         $this->setServerUrl($serverUrl
             ?? ElasticApmConfigUtil::getElasticApmConfig("server_url"));
