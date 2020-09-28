@@ -55,8 +55,10 @@ $agent->setSampleRate(0.5);
 ```php
 $agent->EApmUse();
 ```
->EApmUse可以接受一个匿名函数，当作中间件传入agent中，以Frontend为例：
->经典的匿名函数，可以改成以下
+> 建议在项目入口文件，比如index.php中进行agent的初始化及接入。
+
+> EApmUse可以接受一个匿名函数，当作中间件传入agent中，以Frontend为例：
+> 经典的匿名函数，可以改成以下
 ```php
 $invoke_func = function() use ($_INVOKING_FILE_) {
     require_once($_INVOKING_FILE_);
