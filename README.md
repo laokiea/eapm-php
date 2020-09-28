@@ -232,7 +232,7 @@ $configure = new \EApmPhp\EApmConfigure(
     "eapm-php-user-profile"
 );
 
-$agent = new EApmPhp\EApmComposer();
+$agent = \EApmPhp\EApmComposer::getAgent();
 $agent->setConfigure($configure);
 $agent->setAppConfig("debug", true);
 $agent->setUserId(1001);
@@ -281,7 +281,7 @@ $configure = new \EApmPhp\EApmConfigure(
     "eapm-php-project"
 );
 
-$agent = new EApmPhp\EApmComposer();
+$agent = \EApmPhp\EApmComposer::getAgent();
 $agent->setConfigure($configure);
 
 $agent->setAppConfig("debug", true);
