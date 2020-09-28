@@ -117,6 +117,11 @@ class EApmComposer
     protected $eventPushed = false;
 
     /**
+     * @var static
+     */
+    public static $agent = null;
+
+    /**
      * EApmComposer constructor.
      * @param string|null $library
      * @param array|null $defaultMiddwareOpts
@@ -142,6 +147,22 @@ class EApmComposer
         EApmContainer::bind("GAgent", function() {
             return $this;
         });
+    }
+
+    /**
+     * Single instance
+     *
+     * @param array|null $defaultMiddlewareOpts
+     * @param string|null $library
+     * @return EApmComposer
+     */
+    public static function getAgent(?array $defaultMiddlewareOpts = null, ?string $library = null) : self
+    {
+        if (is_null(self::$agent)) {
+            self::$agent = new self($defaultMiddlewareOpts, $library);
+        }
+
+        return self::$agent;
     }
 
     /**
