@@ -74,13 +74,13 @@ class EApmComposer
      * EApmMiddleware object
      *
      */
-    protected ?EApmMiddleware $middleware = null;
+    protected $middleware = null;
 
     /**
      * EApmDistributeTrace object
      *
      */
-    protected ?EApmDistributeTrace $distributeTrace = null;
+    protected $distributeTrace = null;
 
     /**
      * EApmConfigure object
@@ -98,29 +98,29 @@ class EApmComposer
      * Current transaction
      * @var
      */
-    protected ?EApmTransaction $currentTransaction = null;
+    protected $currentTransaction = null;
 
     /**
      * Logger
      * @var
      */
-    protected ?EApmLogger $logger = null;
+    protected $logger = null;
 
     /**
      * EApmEventIntake object
      * @var
      */
-    protected ?EApmEventIntake $eventIntake;
+    protected $eventIntake;
 
     /**
      * @var bool
      */
-    protected bool $eventPushed = false;
+    protected $eventPushed = false;
 
     /**
      * @var static
      */
-    public static ?EApmComposer $agent = null;
+    public static $agent = null;
 
     /**
      * EApmComposer constructor.
