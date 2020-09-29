@@ -30,7 +30,7 @@ $configure = new \EApmPhp\EApmConfigure(
     "your_apm_secret_token_here",
     "your_apm_service_name_here"
 );
-$agent = \EApmPhp\EApmComposer::getAgent();
+$agent = new EApmPhp\EApmComposer();
 $agent->setConfigure($configure);
 ```
 > 如果apm的配置写到了环境变量中，那么上面的代码可以改成如下：
