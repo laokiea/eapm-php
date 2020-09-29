@@ -159,7 +159,7 @@ class EApmDistributeTrace
 
     /**
      * set valid traceparent
-     *
+     * @param array $traceparent
      */
     public function setValidTraceparent(array $traceparent)
     {
@@ -182,7 +182,7 @@ class EApmDistributeTrace
 
     /**
      * set valid tracestate
-     *
+     * @param array $tracestate
      */
     private function setValidTracestate(array $tracestate)
     {
@@ -260,7 +260,7 @@ class EApmDistributeTrace
 
     /**
      * set has valid trace
-     *
+     * @param bool $has
      */
     private function setHasValidTrace(bool $has)
     {
@@ -279,6 +279,7 @@ class EApmDistributeTrace
     /**
      * Check distribute header info is right hex char
      *
+     * @param string $chars
      * @return bool
      */
     public static function checkHexChar(string $chars) : bool
@@ -293,7 +294,7 @@ class EApmDistributeTrace
 
     /**
      * set distribute trace id
-     *
+     * @param string $traceId
      */
     public function setTraceId(string $traceId)
     {
@@ -311,7 +312,7 @@ class EApmDistributeTrace
 
     /**
      * set distribute trace id
-     *
+     * @param string $parentSpanId
      */
     public function setParentSpanId(string $parentSpanId)
     {
@@ -329,7 +330,7 @@ class EApmDistributeTrace
 
     /**
      * set version id
-     *
+     * @param string $versionId
      */
     public function setVersionId(string $versionId)
     {
@@ -348,6 +349,7 @@ class EApmDistributeTrace
     /**
      * set trace flag
      *
+     * @param string $traceFlag
      * @return void
      */
     public function setTraceFlag(string $traceFlag) : void

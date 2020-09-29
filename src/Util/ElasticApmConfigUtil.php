@@ -23,6 +23,7 @@ final class ElasticApmConfigUtil
     /**
      * Get elastic apm config value specifically
      *
+     * @param string $configName
      * @return string|null
      */
     public static function getElasticApmConfig(string $configName) : ?string

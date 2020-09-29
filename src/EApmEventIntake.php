@@ -88,6 +88,7 @@ class EApmEventIntake
 
     /**
      * EApmEventIntake constructor.
+     * @param EApmComposer|null $composer
      */
     public function __construct(?EApmComposer $composer = null)
     {
@@ -136,6 +137,7 @@ class EApmEventIntake
     /**
      * Add an event(transaction/span/error/metadata)
      * @param EApmEventBase $event
+     * @param bool $preinsert
      */
     public function addEvent(EApmEventBase $event, $preinsert = false) : void
     {
@@ -221,7 +223,7 @@ class EApmEventIntake
      * Get intake request headers
      *
      * @link https://github.com/elastic/apm-agent-php/blob/master/src/ext/util_for_PHP.c#L260
-     * @return string
+     * @return array
      */
     public function getIntakeRequestHeaders() : array
     {

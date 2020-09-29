@@ -24,7 +24,9 @@ final class EApmRandomIdUtil
      * Generate a random id according to specific bytes size
      *
      * @param int $size
+     * @param bool $secure
      * @return string
+     * @throws \Exception
      */
     public static function RandomIdGenerate(int $size, bool $secure = true) : string
     {

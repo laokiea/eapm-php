@@ -183,7 +183,7 @@ class EApmConfigure
     /**
      * Set app configuration
      * @param string $configName
-     * @param $value
+     * @param $configValue
      * @return void
      */
     public function setAppConfig(string $configName, $configValue) : void

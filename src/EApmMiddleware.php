@@ -87,13 +87,13 @@ class EApmMiddleware
 
     /**
      * EApmMiddleware constructor.
-     * @param array $defaultMiddwareOpts
+     * @param array $defaultMiddlewareOpts
      * @param string|null $library
      */
-    public function __construct(array $defaultMiddwareOpts = [], ?string $library = null)
+    public function __construct(array $defaultMiddlewareOpts = [], ?string $library = null)
     {
-        if (!empty($defaultMiddwareOpts)) {
-            foreach ($defaultMiddwareOpts as $middlewareName => $opt) {
+        if (!empty($defaultMiddlewareOpts)) {
+            foreach ($defaultMiddlewareOpts as $middlewareName => $opt) {
                 if (!in_array($middlewareName, $this->defaultMiddlewareOptionsName)) {
                     throw new InvalidArgumentException("Undefined middleware name");
                 } else {

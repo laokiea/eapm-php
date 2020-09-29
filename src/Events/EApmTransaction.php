@@ -51,6 +51,7 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
 
     /**
      * set result
+     * @param string $result
      * @return void
      */
     public function setTransactionResult(string $result)
@@ -61,6 +62,10 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
 
     /**
      * EApmTransaction constructor.
+     * @param string $name
+     * @param string $type
+     * @param EApmEventBase|null $parentEvent
+     * @throws \Exception
      */
     public function __construct(string $name, string $type, ?EApmEventBase $parentEvent)
     {

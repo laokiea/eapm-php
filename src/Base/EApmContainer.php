@@ -51,6 +51,7 @@ final class EApmContainer
     /**
      * Main layer use to overture IoC
      * Return the specified resource the caller depended
+     * @param string $class
      */
     public static function make(string $class)
     {

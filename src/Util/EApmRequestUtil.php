@@ -68,6 +68,7 @@ final class EApmRequestUtil
 
     /**
      * @param string $string
+     * @param string $delimiter
      * @return string
      */
     public static function wordUppercaseFirst(string $string, string $delimiter = "_") : string
@@ -95,7 +96,8 @@ final class EApmRequestUtil
 
     /**
      * Get event duration in MilliSeconds
-     * @return int
+     * @param float $startTime
+     * @return float
      */
     public static function getDurationMilliseconds(float $startTime) : float
     {

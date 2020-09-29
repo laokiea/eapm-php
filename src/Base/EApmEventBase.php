@@ -134,6 +134,7 @@ class EApmEventBase
      * Parent constructor
      *
      * EApmEventBase constructor.
+     * @param EApmEventBase|null $parentEvent
      */
     public function __construct(?EApmEventBase $parentEvent = null)
     {
@@ -481,7 +482,7 @@ class EApmEventBase
     /**
      * Set transaction start timestamp
      *
-     * @param int $timestamp
+     * @param float $timestamp
      */
     public function setTimestamp(float $timestamp) : void
     {
@@ -491,7 +492,7 @@ class EApmEventBase
     /**
      * Get transaction start timestamp
      *
-     * @return int
+     * @return float
      */
     public function getTimestamp() : float
     {
@@ -557,6 +558,7 @@ class EApmEventBase
      * Get a random and unique span id
      *
      * @return string
+     * @throws \Exception
      */
     public function getRandomAndUniqueSpanId() : string
     {
@@ -610,6 +612,7 @@ class EApmEventBase
      *
      * @param EApmEventBase null|$event
      * @return void
+     * @throws \Exception
      */
     public function eventRegister(?EApmEventBase $parentEvent) : void
     {
@@ -676,6 +679,7 @@ class EApmEventBase
     }
 
     /**
+     * @param string $spanId
      * @return array
      */
     public function getChildEventStat(string $spanId) : array
@@ -693,6 +697,7 @@ class EApmEventBase
     }
 
     /**
+     * @param string $spanId
      * @return array
      */
     public function getParentEventStat(string $spanId) : array
