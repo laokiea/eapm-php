@@ -92,13 +92,15 @@ $transaction = $agent->startNewTransaction("POST /avatar/{uid}/upload", "request
 ```php
 $transaction->end();
 ```
->**会话**（包括其他的**Even**t，比如**Span,Error**）可以手动结束，像上面这样，但是使用中我们可以不写这行代码，agent会自动帮我们处理
+>**会话**（包括其他的**Even**t，比如**Span,Error**）可以手动结束，像上面这样，使用中我们可以不写这行代码，agent会自动帮我们处理
+>**但是建议在合适的地方手动调用end**
 
 ##### 发送所有的会话信息
 ```php
 $agent->eventsPush();
 ```
 >和结束会话类似，我们不需要手动操作，agent会自动帮我们发送。
+>**但是建议在合适的地方手动调用eventPush**
 
 ## 添加Span
 >Span和会话类似，也是代表一种操作，只不过更具体。下面具体Http/DB等操作添加Span为例
@@ -241,11 +243,12 @@ $agent->EApmUse();
 $transaction = $agent->startNewTransaction("GET /user/{uid}/info", "request");
 $mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
+
+$transaction->end();
+$agent->eventPush();
 ```
 
 >可以看到上面的代码其实就是基本实例的完整版。没有额外的处理，agent会自动处理分布式追踪，效果在APM服务里就像这样：
-
->⚠️ 我们并没有调用end方法和eventPush方法，agent会自动处理。
 
 >在APM面板上的效果：
 ![image](https://user-images.githubusercontent.com/13516246/93850123-0a114800-fce0-11ea-9362-de5b6c02ec87.png)
@@ -314,4 +317,7 @@ try {
     $agent->getLogger()->logError((string)$e);
     $agent->captureError($e, $httpSpan);
 }
+
+$transaction->end();
+$agent->eventPush();
 ```
