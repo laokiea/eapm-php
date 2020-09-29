@@ -87,7 +87,8 @@ class EApmMiddleware
 
     /**
      * EApmMiddleware constructor.
-     *
+     * @param array $defaultMiddwareOpts
+     * @param string|null $library
      */
     public function __construct(array $defaultMiddwareOpts = [], ?string $library = null)
     {
@@ -124,6 +125,7 @@ class EApmMiddleware
      *
      * @param \Closure $middleware
      * @return void
+     * @throws \ReflectionException
      */
     public function addMiddleWares(\Closure $middleware) : void
     {
@@ -251,6 +253,7 @@ retraceanddeltracestate:
     /**
      * middleware call
      *
+     * @param callable|null $call
      * @return void
      */
     public function middlewareInvoke(callable $call = null) : void

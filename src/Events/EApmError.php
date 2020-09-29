@@ -132,6 +132,7 @@ class EApmError extends EApmEventBase implements \JsonSerializable
      * Json serialize transaction event object
      * @link https://www.elastic.co/guide/en/apm/server/master/error-api.html
      * @return array
+     * @throws \ReflectionException
      */
     public function jsonSerialize()
     {
