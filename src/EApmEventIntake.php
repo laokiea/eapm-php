@@ -15,6 +15,7 @@ namespace EApmPhp;
 
 use EApmPhp\Base\EApmEventBase;
 use EApmPhp\Events\EApmMetadata;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
@@ -286,9 +287,9 @@ class EApmEventIntake
 
     /**
      * Send a request to APM server
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
-    public function pingApmServer() : \Psr\Http\Message\ResponseInterface
+    public function pingApmServer() : ResponseInterface
     {
         return $this->getEventClient()->get(
             $this->getComposer()->getConfiguration("server_url"),

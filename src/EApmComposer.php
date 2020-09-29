@@ -25,6 +25,7 @@ use EApmPhp\Util\EApmRandomIdUtil;
 use EApmPhp\Util\EApmRequestUtil;
 use Elastic\Apm\TransactionInterface;
 use Elastic\Apm\ElasticApm;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class EApmComposer
@@ -55,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "0.0.2";
+    public const AGENT_VERSION = "0.1.1";
 
     /**
      * Agent name
@@ -73,13 +74,13 @@ class EApmComposer
      * EApmMiddleware object
      *
      */
-    protected $middleware = null;
+    protected ?EApmMiddleware $middleware = null;
 
     /**
      * EApmDistributeTrace object
      *
      */
-    protected $distributeTrace = null;
+    protected ?EApmDistributeTrace $distributeTrace = null;
 
     /**
      * EApmConfigure object
@@ -97,34 +98,34 @@ class EApmComposer
      * Current transaction
      * @var
      */
-    protected $currentTransaction = null;
+    protected ?EApmTransaction $currentTransaction = null;
 
     /**
      * Logger
      * @var
      */
-    protected $logger = null;
+    protected ?EApmLogger $logger = null;
 
     /**
      * EApmEventIntake object
      * @var
      */
-    protected $eventIntake;
+    protected ?EApmEventIntake $eventIntake;
 
     /**
      * @var bool
      */
-    protected $eventPushed = false;
+    protected bool $eventPushed = false;
 
     /**
      * @var static
      */
-    public static $agent = null;
+    public static ?EApmComposer $agent = null;
 
     /**
      * EApmComposer constructor.
+     * @param array|null $defaultMiddlewareOpts
      * @param string|null $library
-     * @param array|null $defaultMiddwareOpts
      */
     public function __construct(?array $defaultMiddlewareOpts = null, ?string $library = null)
     {
@@ -166,6 +167,7 @@ class EApmComposer
     }
 
     /**
+     * @param array $opt
      * @return void
      */
     public function prepareBinds(array $opt) : void
@@ -208,6 +210,7 @@ class EApmComposer
 
     /**
      * Set transaction library
+     * @param string $library
      */
     public function setLibrary(string $library) : void
     {
@@ -570,9 +573,9 @@ class EApmComposer
     /**
      * Send all the events to APM server
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
-    public function pingApmServer() : \Psr\Http\Message\ResponseInterface
+    public function pingApmServer() : ResponseInterface
     {
         return $this->getEventIntake()->pingApmServer();
     }
