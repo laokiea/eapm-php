@@ -36,7 +36,7 @@ $agent->setConfigure($configure);
 > 如果apm的配置写到了环境变量中，那么上面的代码可以改成如下：
 ```php
 $configure = new \EApmPhp\EApmConfigure();
-$agent = \EApmPhp\EApmComposer::getAgent();
+$agent = new EApmPhp\EApmComposer();
 $agent->setConfigure($configure);
 ```
 
@@ -234,7 +234,7 @@ $configure = new \EApmPhp\EApmConfigure(
     "eapm-php-user-profile"
 );
 
-$agent = \EApmPhp\EApmComposer::getAgent();
+$agent = new EApmPhp\EApmComposer();
 $agent->setConfigure($configure);
 $agent->setAppConfig("debug", true);
 $agent->setUserId(1001);
@@ -284,7 +284,7 @@ $configure = new \EApmPhp\EApmConfigure(
     "eapm-php-project"
 );
 
-$agent = \EApmPhp\EApmComposer::getAgent();
+$agent = new EApmPhp\EApmComposer();
 $agent->setConfigure($configure);
 
 $agent->setAppConfig("debug", true);
