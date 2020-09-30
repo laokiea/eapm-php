@@ -11,6 +11,10 @@
 ```php
 $agent = new EApmPhp\EApmComposer();
 ```
+> 也可以使用单例模式
+```php
+$agent = EApmPhp\EApmComposer::getAgent();
+```
 
 #### APM相关配置
 > SERVER_URL：**APM地址**
