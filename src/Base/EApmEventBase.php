@@ -135,6 +135,7 @@ class EApmEventBase
      *
      * EApmEventBase constructor.
      * @param EApmEventBase|null $parentEvent
+     * @throws \Exception
      */
     public function __construct(?EApmEventBase $parentEvent = null)
     {

@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.1.1";
+    public const AGENT_VERSION = "1.1.2";
 
     /**
      * Agent name
@@ -394,6 +394,7 @@ class EApmComposer
      * @param EApmEventBase|null $parentEvent
      *
      * @return EApmTransaction
+     * @throws \Exception
      */
     public function createNewTransaction(string $name, string $type, ?EApmEventBase $parentEvent = null) : EApmTransaction
     {
@@ -404,9 +405,11 @@ class EApmComposer
             $transaction->setTraceId($this->getDistributeTrace()->getTraceId());
             $transaction->setParentId($this->getDistributeTrace()->getParentSpanId());
         } else {
-            $transaction->setTraceId(
-                EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
-            );
+            if (is_null($transaction->getTraceId())) {
+                $transaction->setTraceId(
+                    EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
+                );
+            }
         }
 
         return $transaction;

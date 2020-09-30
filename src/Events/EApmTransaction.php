@@ -85,9 +85,11 @@ class EApmTransaction extends EApmEventBase implements \JsonSerializable
                     $this->getComposer()->getDistributeTrace()->getParentSpanId()
                 );
             } else {
-                $this->setTraceId(
-                    EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
-                );
+                if (is_null($this->getTraceId())) {
+                    $this->setTraceId(
+                        EApmRandomIdUtil::RandomIdGenerate(EApmDistributeTrace::TRACEID_LENGTH / 2)
+                    );
+                }
             }
         }
         // prepare result
