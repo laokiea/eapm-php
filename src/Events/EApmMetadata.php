@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace EApmPhp\Events;
 
+use EApmPhp\Base\EApmContainer;
 use EApmPhp\Base\EApmEventBase;
 use EApmPhp\EApmComposer;
 use EApmPhp\Util\EApmServiceUtil;
@@ -27,6 +28,19 @@ class EApmMetadata extends EApmEventBase implements \JsonSerializable
      * @const
      */
     public const EVENT_TYPE = "metadata";
+
+    /**
+     * EApmMetadata constructor.
+     * @param EApmEventBase|null $parentEvent
+     */
+    public function __construct(?EApmEventBase $parentEvent = null)
+    {
+        $this->setComposer(EApmContainer::make("GAgent"));
+        if (!is_null($this->getComposer()->getCurrentTransaction())) {
+            $parentEvent = $this->getComposer()->getCurrentTransaction();
+        }
+        parent::__construct($parentEvent);
+    }
 
     /**
      * Json serialize transaction event object

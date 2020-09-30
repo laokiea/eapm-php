@@ -274,6 +274,9 @@ class EApmEventIntake
             return false;
         } finally {
             $this->eventsReset();
+            EApmEventBase::registeredEventsClear(
+                $this->getComposer()->getCurrentTransaction()->getId()
+            );
         }
 
         /*

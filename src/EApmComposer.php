@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.1.0";
+    public const AGENT_VERSION = "1.1.1";
 
     /**
      * Agent name
@@ -323,11 +323,7 @@ class EApmComposer
      */
     public function getCurrentTransaction()
     {
-        return $this->currentTransaction
-            ?? $this->startNewTransaction(
-                $this->getDefaultTransactionName(),
-                self::DEFAULT_TRANSACTION_TYPE
-            );
+        return $this->currentTransaction;
     }
 
     /**
@@ -560,6 +556,10 @@ class EApmComposer
      */
     public function eventsPush() : void
     {
+        if (is_null($this->getCurrentTransaction())) {
+            return;
+        }
+
         if (is_null($this->getConfigure())) {
             $this->setConfigure(new EApmConfigure("", "", "eapm-php-project"));
         }

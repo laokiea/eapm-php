@@ -712,4 +712,29 @@ class EApmEventBase
 
         return $parentEventStat;
     }
+
+    /**
+     * Clear registered events
+     * In Swoole framework, some variables do not clears automatically after request ended.
+     * So, related events in $registeredEvents should be cleared manually.
+     *
+     * @param string $transactionId
+     * @return void
+     */
+    public static function registeredEventsClear(string $transactionId) : void
+    {
+        if (isset(self::$registeredEvents[$transactionId])) {
+            $transactionEvent = self::$registeredEvents[$transactionId];
+            if ($transactionEvent["eventType"] !== EApmTransaction::EVENT_TYPE) {
+                return;
+            }
+
+            $traceId = $transactionEvent["traceId"];
+            foreach (self::$registeredEvents as $eventId => $event) {
+                if ($event["traceId"] === $traceId) {
+                    unset(self::$registeredEvents[$eventId]);
+                }
+            }
+        }
+    }
 }
