@@ -11,6 +11,10 @@
 ```php
 $agent = new EApmPhp\EApmComposer();
 ```
+> 也可以使用单例模式
+```php
+$agent = EApmPhp\EApmComposer::getAgent();
+```
 
 #### APM相关配置
 > SERVER_URL：**APM地址**
@@ -93,14 +97,14 @@ $transaction = $agent->startNewTransaction("POST /avatar/{uid}/upload", "request
 $transaction->end();
 ```
 >**会话**（包括其他的**Even**t，比如**Span,Error**）可以手动结束，像上面这样，使用中我们可以不写这行代码，agent会自动帮我们处理
->**但是建议在合适的地方手动调用end**
+>**如果你正在使用swoole作为服务，务必在合适的地方手动调用end**
 
 ##### 发送所有的会话信息
 ```php
 $agent->eventsPush();
 ```
 >和结束会话类似，我们不需要手动操作，agent会自动帮我们发送。
->**但是建议在合适的地方手动调用eventPush**
+>**如果你正在使用swoole作为服务，务必在合适的地方手动调用eventPush***
 
 ## 添加Span
 >Span和会话类似，也是代表一种操作，只不过更具体。下面具体Http/DB等操作添加Span为例
