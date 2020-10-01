@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.1.2";
+    public const AGENT_VERSION = "1.1.3";
 
     /**
      * Agent name
@@ -564,7 +564,9 @@ class EApmComposer
         }
 
         if (is_null($this->getConfigure())) {
-            $this->setConfigure(new EApmConfigure("", "", "eapm-php-project"));
+            $this->setConfigure(new EApmConfigure("", "",
+                $this->getConfigure()->getEndedServiceName()
+            ));
         }
 
         if (!$this->eventPushed) {

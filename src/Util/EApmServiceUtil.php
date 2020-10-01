@@ -22,12 +22,12 @@ final class EApmServiceUtil
 {
     /**
      * Speculate the service name
-     * @return string
+     * @return null|string
      */
-    public static function speculateServiceName() : string
+    public static function speculateServiceName() : ?string
     {
         return isset($_SERVER["DOCUMENT_ROOT"])
             ? substr($_SERVER["DOCUMENT_ROOT"], strrpos($_SERVER["DOCUMENT_ROOT"], DIRECTORY_SEPARATOR) + 1)
-            : "";
+            : null;
     }
 }

@@ -66,7 +66,7 @@ class EApmMetadata extends EApmEventBase implements \JsonSerializable
                         "name" => "php",
                         "version" => phpversion(),
                     ],
-                    "name" => $this->getComposer()->getConfigure()->getServiceName() ?? EApmServiceUtil::speculateServiceName(),
+                    "name" => $this->getComposer()->getConfigure()->getEndedServiceName(),
                     "environment" => $this->getComposer()->getConfigure()->getAppConfig("environment"),
                     "version" => $this->getComposer()->getConfigure()->getAppConfig("service_version"),
                     "runtime" => null,

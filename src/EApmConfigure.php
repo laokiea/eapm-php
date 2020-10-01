@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace EApmPhp;
 
 use EApmPhp\Util\EApmRequestUtil;
+use EApmPhp\Util\EApmServiceUtil;
 use EApmPhp\Util\ElasticApmConfigUtil;
 use RuntimeException;
 
@@ -23,6 +24,7 @@ use RuntimeException;
  */
 class EApmConfigure
 {
+    public const COMMON_SERVICE_NAME = "eapm-php-project";
     /**
      * Elastic apm server url
      * @var
@@ -172,6 +174,7 @@ class EApmConfigure
     /**
      * Get app configuration
      * @param string $appConfigName
+     * @return mixed|null
      */
     public function getAppConfig(string $appConfigName)
     {
@@ -189,5 +192,16 @@ class EApmConfigure
     public function setAppConfig(string $configName, $configValue) : void
     {
         $this->appConfig[$configName] = $configValue;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEndedServiceName() : string
+    {
+        return $this->getServiceName() ??
+            (EApmServiceUtil::speculateServiceName() ??
+            self::COMMON_SERVICE_NAME
+            );
     }
 }
