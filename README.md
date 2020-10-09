@@ -138,6 +138,8 @@ var_dump($result);
 >`startMysqlTypeSpan`方法表示进行具体的mysql操作，这里agent做了一个封装
 >可以传入实例化后的`mysqli/PDO`对象以及需要执行的sql语句，函数会将执行后的结果返回。
 
+> ⚠️**如果函数执行失败，方法会返回false，有必要在使用时进行false结果的判断**
+
 >⚠️需要注意的是，传入`mysqli`实例之前，必须已经调用`select_db`方法
 
 #### 添加Redis Span
@@ -158,6 +160,8 @@ var_dump($result);
 > 2. **type**以点分隔符，记录操作的数据库类型,例如`db.redis`
 > 3. **sub_type**以点分隔符，记录db实例名，例如`hermes`
 > 4. `startRedisTypeSpan`的参数从第三个开始，和执行命令的参数保持一致即可。
+
+> ⚠️**如果函数执行失败，方法会返回false，有必要在使用时进行false结果的判断**
 
 #### HTTP Span
 > 见分布式追踪章节
@@ -208,6 +212,8 @@ $response = $httpSpan->startHttpTypeSpan("GET", "http://localhost:8812/test_dist
 > 1. **name**传入`请求方法 微服务名`,例如`GET user_profile`
 > 2. **type**以点分隔符，记录操作的类型，例如调用微服务则是`request.microservice`
 > 3. **sub_type**以点分隔符，记录微服务名，例如`user_profile`
+
+> ⚠️**如果函数执行失败，方法会返回false，有必要在使用时进行false结果的判断**
 
 >⚠️对于`startHttpTypeSpan`方法的参数，说明如下：
 >前两个分别是请求类型和地址(完整的地址，最好以https/http打头)
