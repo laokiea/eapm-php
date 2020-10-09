@@ -304,47 +304,6 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     }
 
     /**
-     * Set correlation id of per span
-     *
-     * @param int $correlationId
-     * @return void
-     */
-    public function setCorrelationId(int $correlationId) : void
-    {
-        $this->setLabel("correlation_id", $correlationId);
-    }
-
-    /**
-     * Set user define labels context
-     *
-     * @param string $labelKey
-     * @param $labelValue
-     * @return void
-     */
-    public function setLabel(string $labelKey, $labelValue) : void
-    {
-        $labelType = gettype($labelValue);
-        switch($labelType) {
-            case "boolean":
-            case "integer":
-            case "double":
-            case "NULL":
-                break;
-            case "string":
-                $this->checkContextFieldLength($labelValue, "");
-                break;
-            default:
-                return;
-        }
-
-        $this->setContext([
-            "tags" => [
-                $labelKey => $labelValue,
-            ],
-        ]);
-    }
-
-    /**
      * Json serialize span event object
      * @link https://www.elastic.co/guide/en/apm/server/master/span-api.html
      * @return array

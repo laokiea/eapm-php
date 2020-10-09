@@ -738,4 +738,45 @@ class EApmEventBase
             }
         }
     }
+
+    /**
+     * Set correlation id of per span
+     *
+     * @param int $correlationId
+     * @return void
+     */
+    public function setCorrelationId(int $correlationId) : void
+    {
+        $this->setLabel("correlation_id", $correlationId);
+    }
+
+    /**
+     * Set user define labels context
+     *
+     * @param string $labelKey
+     * @param $labelValue
+     * @return void
+     */
+    public function setLabel(string $labelKey, $labelValue) : void
+    {
+        $labelType = gettype($labelValue);
+        switch($labelType) {
+            case "boolean":
+            case "integer":
+            case "double":
+            case "NULL":
+                break;
+            case "string":
+                $this->checkContextFieldLength($labelValue, "");
+                break;
+            default:
+                return;
+        }
+
+        $this->setContext([
+            "tags" => [
+                $labelKey => $labelValue,
+            ],
+        ]);
+    }
 }
