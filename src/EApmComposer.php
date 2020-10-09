@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.1.3";
+    public const AGENT_VERSION = "1.1.4";
 
     /**
      * Agent name
@@ -298,7 +298,6 @@ class EApmComposer
      * Set user id
      *
      * @param int $userId
-     *
      * @return void
      */
     public function setUserId(int $userId) : void
