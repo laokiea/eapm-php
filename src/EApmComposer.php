@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.1.4";
+    public const AGENT_VERSION = "1.2.0";
 
     /**
      * Agent name

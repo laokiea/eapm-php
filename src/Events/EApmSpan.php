@@ -323,6 +323,20 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      */
     public function setLabel(string $labelKey, $labelValue) : void
     {
+        $labelType = gettype($labelValue);
+        switch($labelType) {
+            case "boolean":
+            case "integer":
+            case "double":
+            case "NULL":
+                break;
+            case "string":
+                $this->checkContextFieldLength($labelValue, "");
+                break;
+            default:
+                return;
+        }
+
         $this->setContext([
             "tags" => [
                 $labelKey => $labelValue,
