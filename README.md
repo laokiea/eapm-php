@@ -192,18 +192,6 @@ $consumeSpan->setMessageQueueSpanContext("consume data body");
 
 >setMessageQueueSpanContext方法**接受生产或者消费到的消息体作为参数**(如果生产或者消费多条消息，**可以传空字符串或者最后一条消息的内容**)
 
-## 设置Label
-> 对于transaction,span,erro对象，可以使用**setLabel**方法设置Label
-> label实际上是一对key-value串
-> value可以设置所有的标量类型包括NULL，对于字符串类型的label值，最大长度为1024
-```php
-$span = $agent->startNewSpan("SELECT", "db.mysql.select", "blued.adm", $transaction);
-$span->setLabel("team", "team-backend");
-$span->setLabel("mid", 1234);
-```
-
-> 每一个设置label后的对象，都可以在APM面板上直接粘贴label值进行搜索。
-
 ## 分布式追踪
 > 一个完整的HTTP请求，可能会经过多个微服务或者其他第三方服务。
 > 例如在Frontend里调用user-profile,广告，用户关系等微服务，那么可以在以上的微服务中也接入eapm-php,达到分布式追踪的效果。
@@ -276,6 +264,18 @@ $agent->eventPush();
 ![image](https://user-images.githubusercontent.com/13516246/93850123-0a114800-fce0-11ea-9362-de5b6c02ec87.png)
 >可以看到两个服务串成一个完整的会话，微服务里的db操作也可以清晰的看到
 
+
+## 设置Label
+> 对于transaction,span,erro对象，可以使用**setLabel**方法设置Label
+> label实际上是一对key-value串
+> value可以设置所有的标量类型包括NULL，对于字符串类型的label值，最大长度为1024
+```php
+$span = $agent->startNewSpan("SELECT", "db.mysql.select", "blued.adm", $transaction);
+$span->setLabel("team", "team-backend");
+$span->setLabel("mid", 1234);
+```
+
+> 每一个设置label后的对象，都可以在APM面板上直接粘贴label值进行搜索。
 
 ## Error捕获
 #### 代码
