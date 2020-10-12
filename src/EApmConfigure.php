@@ -73,6 +73,7 @@ class EApmConfigure
      * EApmConfigure callStatic function.
      * @param $name
      * @param $arguments
+     * @return null
      */
     public static function __callStatic($name, $arguments)
     {
