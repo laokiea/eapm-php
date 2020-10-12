@@ -322,12 +322,14 @@ $transaction = $agent->startNewTransaction("POST /user/{uid}/avatar/upload", "ht
 
 // mysql span
 $mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
+$mysqlSpan->setLabel("adid", 1234);
 // getMysqlInstance 返回一个数据库实例
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
 $mysqlSpan->end();
 
 // redis span
 $redisSpan = $agent->startNewSpan("ZREVRANGE", "db.redis", "hermes", $transaction);
+$mysqlSpan->setLabel("adid", 1234);
 // getRedisInstance返回一个redis实例
 $result = $redisSpan->startRedisTypeSpan(getRedisInstance(), "ZREVRANGE", "u:9336644:sessions", 0, 199, true);
 $redisSpan->end();
