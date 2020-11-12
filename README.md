@@ -1,5 +1,5 @@
 # EAPM-PHP
-#### **a php agent for elastic-apm**
+#### **A php agent for elastic-apm**
 
 ## 安装
 > **`composer require laokiea/eapm-php`**
