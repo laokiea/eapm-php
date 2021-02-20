@@ -11,7 +11,7 @@
     "license": "MIT",
     "homepage": "https://github.com/laokiea/EAPM-PHP",
     "require": {
-        "guzzlehttp/guzzle": "6.*",
+        "guzzlehttp/guzzle": ">=6.*",
         "php":">=7.0.0",
         "ext-json": "*",
         "ext-mbstring": "*"
