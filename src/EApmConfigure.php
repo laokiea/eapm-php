@@ -58,6 +58,9 @@ class EApmConfigure
 
     /**
      * EApmConfigure constructor.
+     * @param string|null $serverUrl
+     * @param string|null $secretToken
+     * @param string|null $serviceName
      */
     public function __construct(?string $serverUrl = null, ?string $secretToken = null, ?string $serviceName = null)
     {
