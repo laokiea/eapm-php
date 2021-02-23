@@ -252,12 +252,18 @@ class EApmEventIntake
             $this->metadataSated();
         }
 
+        $_ = $this->getComposer()->getConfigure()->getAppConfig("debug") ? null : function(ResponseInterface $response) {
+            if ($response->getStatusCode() !== self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
+                $this->getComposer()->getLogger()->logError("Request Apm Failed: " . $response->getBody()->getContents());
+            }
+        };
+
         try {
             // do nothing and drop response
             $promise = $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
-            ])->then();
+            ])->then($_);
 
             // event loop
             $pendingLoopTimes = 0;

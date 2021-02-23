@@ -33,7 +33,7 @@ final class EApmRequestUtil
     {
         $headers = [];
         foreach ($_SERVER as $name => $value) {
-            if (substr($name, 0, 5) == 'HTTP_') {
+            if (gettype($value) == "string" && substr($name, 0, 5) == 'HTTP_') {
                 $value = trim($value);
                 $headerName = str_replace(' ', '-', strtolower(str_replace('_', ' ', substr($name, 5))));
                 if ($headerName === "tracestate") {
