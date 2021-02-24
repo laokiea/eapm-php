@@ -441,8 +441,8 @@ class EApmEventBase
             "raw" => EApmRequestUtil::getHttpRawUrl(),
             "protocol" => $_SERVER["HTTPS"] ? "https" : "http",
             "full" => EApmRequestUtil::getHttpRawUrl(),
-            "hostname" => $_SERVER["SERVER_NAME"],
-            "port" => $_SERVER["SERVER_PORT"],
+            "hostname" => $_SERVER["SERVER_NAME"] ?? "",
+            "port" => $_SERVER["SERVER_PORT"] ?? "-1",
             "pathname" => pathinfo($_SERVER["REQUEST_URI"] ?? "")["dirname"],
             "search" => $_SERVER["QUERY_STRING"] ?? "",
             "hash" => hash("sha256", EApmRequestUtil::getHttpRawUrl())
@@ -475,6 +475,7 @@ class EApmEventBase
      */
     public function checkContextFieldLength(&$value, $key) : void
     {
+        $value = (string)$value;
         if (mb_strlen($value) > self::CONTEXT_FIELD_MAX_LENGTH) {
             $value = mb_substr($value, 0, self::CONTEXT_FIELD_MAX_LENGTH - 1) . "…";
         }
