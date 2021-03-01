@@ -217,7 +217,7 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
      * @param $mysql
      * @param string $sql
      *
-     * @return bool|null
+     * @return bool|null|array
      */
     public function startMysqlTypeSpan($mysql, string $sql)
     {

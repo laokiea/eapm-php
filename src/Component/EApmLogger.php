@@ -95,4 +95,14 @@ final class EApmLogger
     {
         $this->appLogger("error", $msg);
     }
+
+    /**
+     * Log info message
+     * @param string $msg
+     * @return void
+     */
+    public function logInfo(string $msg) : void
+    {
+        $this->appLogger("info", $msg);
+    }
 }

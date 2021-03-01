@@ -56,7 +56,7 @@ class EApmComposer
      * Agent version
      * @const
      */
-    public const AGENT_VERSION = "1.2.0";
+    public const AGENT_VERSION = "1.2.4";
 
     /**
      * Agent name
@@ -582,6 +582,16 @@ class EApmComposer
     public function pingApmServer() : ResponseInterface
     {
         return $this->getEventIntake()->pingApmServer();
+    }
+
+    /**
+     * Get Apm agent remote config
+     *
+     * @return array
+     */
+    public function getApmAgentRemoteConfig() : array
+    {
+        return $this->getEventIntake()->getApmAgentRemoteConfig();
     }
 
     /**

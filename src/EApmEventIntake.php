@@ -35,6 +35,12 @@ class EApmEventIntake
      */
     private const EVEN_INTAKE_V2_ENDPOINT = "/intake/v2/events";
 
+    /*
+     * apm agent remote config endpoint
+     * @const string
+     */
+    private const AGENT_CONFIG_V1_ENDPOINT = "/config/v1/agents";
+
     /**
      * Event push content-type header
      * @const string
@@ -241,6 +247,17 @@ class EApmEventIntake
     }
 
     /**
+     * Get apm agent remote configuration endpoint
+     *
+     * @return string
+     */
+    public function getAgentRemoteConfigEndpoint() : string
+    {
+        return $this->getComposer()->getConfigure()->getServerUrl() .
+            self::AGENT_CONFIG_V1_ENDPOINT . "?service.name=" . $this->getComposer()->getConfigure()->getServiceName();
+    }
+
+    /**
      * Send all events to the APM server
      *
      * @return bool
@@ -252,10 +269,15 @@ class EApmEventIntake
             $this->metadataSated();
         }
 
-        $_ = $this->getComposer()->getConfigure()->getAppConfig("debug") ? null : function(ResponseInterface $response) {
+        $_ = function(ResponseInterface $response) {
             if ($response->getStatusCode() !== self::EVENT_PUSH_SUCCESS_ACCEPTED_STATUS_CODE) {
                 $this->getComposer()->getLogger()->logError("Request Apm Failed: " . $response->getBody()->getContents());
             }
+            $infoMsg = $this->getComposer()->getCurrentTransaction()->getName() . " "
+                     . $this->getComposer()->getCurrentTransaction()->getType() . " "
+                     . $response->getStatusCode() . " "
+                     . $response->getBody()->getContents();
+            $this->getComposer()->getLogger()->logInfo($infoMsg);
         };
 
         try {
@@ -263,7 +285,11 @@ class EApmEventIntake
             $promise = $this->getEventClient()->requestAsync("POST", $this->getEventPushServerUrl(), [
                 "headers" => $this->getIntakeRequestHeaders(),
                 "body" => $this->getIntakeRequestBody(),
-            ])->then($_);
+            ]);
+
+            if ($this->getComposer()->getConfigure()->getAppConfig("debug")) {
+                $promise->then($_);
+            }
 
             // event loop
             $pendingLoopTimes = 0;
@@ -308,5 +334,29 @@ class EApmEventIntake
                 "headers" => $this->getIntakeRequestHeaders(),
             ]
         );
+    }
+
+    /**
+     * Get Apm agent remote config
+     *
+     * @return array
+     */
+    public function getApmAgentRemoteConfig() : array
+    {
+       $response =  $this->getEventClient()->get(
+            $this->getAgentRemoteConfigEndpoint(),
+            [
+                "headers" => $this->getIntakeRequestHeaders(),
+            ]
+        );
+       if ($response->getStatusCode() === 200) {
+           $result = json_decode($response->getBody()->getContents(), true);
+           if ($result === false) {
+               return [];
+           }
+           return $result;
+       } else {
+           return [];
+       }
     }
 }
