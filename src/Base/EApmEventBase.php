@@ -591,7 +591,7 @@ class EApmEventBase
      */
     public function getChildSpanIds() : array
     {
-        return self::$registeredEvents[$this->getId()]["childEvent"];
+        return self::$registeredEvents[$this->getId()]["childEvent"] ?? [];
     }
 
     /**

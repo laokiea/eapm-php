@@ -222,10 +222,12 @@ class EApmSpan extends EApmEventBase implements \JsonSerializable
     public function startMysqlTypeSpan($mysql, string $sql)
     {
         $dbContext = [
-            "instance" => $this->getSubtype(),
-            "statement" => $sql,
-            "type" => "sql",
-            "rows_affected" => 0,
+            "db" => [
+                "instance" => $this->getSubtype(),
+                "statement" => $sql,
+                "type" => "sql",
+                "rows_affected" => 0,
+            ],
         ];
         $this->setSpanIsSync(true);
 
