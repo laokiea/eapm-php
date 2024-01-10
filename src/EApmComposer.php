@@ -64,6 +64,8 @@ class EApmComposer
      */
     public const AGENT_NAME = "eapm-php";
 
+    public const WATCHER_TICK = 10;
+
     /**
      * Guzzle client to send event
      * @var
@@ -123,6 +125,11 @@ class EApmComposer
     public static $agent = null;
 
     /**
+     * @var int
+     */
+    public $watcherPid;
+
+    /**
      * EApmComposer constructor.
      * @param array|null $defaultMiddlewareOpts
      * @param string|null $library
@@ -145,9 +152,40 @@ class EApmComposer
         $this->setLogger(EApmContainer::make("logger"));
         $this->getLogger()->setComposer($this);
 
+        $this->EApmConfigureWatcher();
+
         EApmContainer::bind("GAgent", function() {
             return $this;
         });
+    }
+
+    /**
+     * remote control
+     * @return void
+     */
+    public function EApmConfigureWatcher() {
+        foreach (["pcntl", "event"] as $extension) {
+            if (!extension_loaded($extension)) {
+                $this->getLogger()->logWarn("missing $extension extension");
+                return;
+            }
+        }
+        $pid = pcntl_fork();
+        if ($pid === -1) {
+            $this->getLogger()->logError("watcher fork failed");
+            return;
+        } else if ($pid === 0) {
+            $eb = new \EventBase(new \EventConfig());
+            $timer = new \Event($eb, -1, \Event::TIMEOUT | \Event::PERSIST, function() {
+                $result = $this->getEventIntake()->getApmAgentRemoteConfig();
+            });
+            $timer->add(self::WATCHER_TICK);
+            $eb->loop();
+        } else {
+            $this->watcherPid = $pid;
+            // no waiting
+            return;
+        }
     }
 
     /**
@@ -368,6 +406,7 @@ class EApmComposer
      * @param string $type
      *
      * @return EApmTransaction
+     * @throws \Exception
      */
     public function startNewTransaction(string $name, string $type)
     {
