@@ -25,7 +25,7 @@ $agent = EApmPhp\EApmComposer::getAgent();
 
 > 上述配置在使用中，可以配置到系统的环境变量里，格式：ELASTIC_APM_xxx,例如：ELASTIC_APM_SERVER_URL
 
-**其他相关配置查看** [APM接入文档](https://bluecity.feishu.cn/docs/doccnDTjBZaEirrtTHhYU1Czarc)
+**其他相关配置查看** [APM接入文档](https://*****)
 
 ###### 代码
 ```php
@@ -115,7 +115,7 @@ $agent->eventsPush();
 #### 添加Mysql Span
 ##### 代码
 ```php
-$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
+$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "adm", $transaction);
 
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
 
@@ -133,7 +133,7 @@ var_dump($result);
 > ⚠️**对于Mysql操作，上面参数的值有以下建议:**
 > 1. **name**传入`SELECT/UPDATE/DELETE`操作名
 > 2. **type**以点分隔符，记录操作的数据库类型,例如`db.mysql`
-> 3. **sub_type**以点分隔符，记录数据库及表名，例如`blued.adm`
+> 3. **sub_type**以点分隔符，记录数据库及表名，例如`adm`
 
 >`startMysqlTypeSpan`方法表示进行具体的mysql操作，这里agent做了一个封装
 >可以传入实例化后的`mysqli/PDO`对象以及需要执行的sql语句，函数会将执行后的结果返回。
@@ -231,7 +231,7 @@ $response = $httpSpan->startHttpTypeSpan("GET", "http://localhost:8812/test_dist
         "Content-Type" => "application/json",
     ],
     "json" => [
-        "app" => "blued",
+        "app" => "",
     ],
 ]
 ```
@@ -251,7 +251,7 @@ $agent->setUserId(1001);
 $agent->EApmUse();
 
 $transaction = $agent->startNewTransaction("GET /user/{uid}/info", "request");
-$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
+$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", ".adm", $transaction);
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
 
 $transaction->end();
@@ -270,7 +270,7 @@ $agent->eventPush();
 > label实际上是一对key-value串
 > value可以设置所有的标量类型包括NULL，对于字符串类型的label值，最大长度为1024
 ```php
-$span = $agent->startNewSpan("SELECT", "db.mysql.select", "blued.adm", $transaction);
+$span = $agent->startNewSpan("SELECT", "db.mysql.select", ".adm", $transaction);
 $span->setLabel("team", "team-backend");
 $span->setLabel("mid", 1234);
 ```
@@ -321,7 +321,7 @@ $agent->EApmUse(functoion(){
 $transaction = $agent->startNewTransaction("POST /user/{uid}/avatar/upload", "http.request");
 
 // mysql span
-$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "blued.adm", $transaction);
+$mysqlSpan = $agent->startNewSpan("SELECT", "db.mysql", "adm", $transaction);
 $mysqlSpan->setLabel("adid", 1234);
 // getMysqlInstance 返回一个数据库实例
 $result = $mysqlSpan->startMysqlTypeSpan(getMysqlInstance(), "select * from adm where type = 1 and status = 1");
